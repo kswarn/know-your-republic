@@ -1,6 +1,7 @@
-import { Gavel } from 'lucide-react';
+import Image from 'next/image';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import type { Metadata } from 'next';
+import type { HTMLAttributes } from 'react';
 
 import { Card } from '@/components/Card';
 import { DomainShell } from '@/components/DomainShell';
@@ -9,6 +10,11 @@ import { SearchBar } from '@/components/SearchBar';
 import { SourceLink } from '@/components/SourceLink';
 import { db } from '@/lib/db';
 import { personSlug } from '@/lib/people';
+
+// Free-tier Flaticon asset ("Guilt" by Magnific) — attribution: flaticon.com.
+function GavelIcon({ className }: HTMLAttributes<HTMLElement>) {
+  return <Image src="/gavel.png" alt="" width={28} height={28} className={className} />;
+}
 
 export async function generateMetadata(props: {
   params: Promise<{ locale: string }>;
@@ -84,7 +90,7 @@ export default async function JudiciaryPage({
   return (
     <DomainShell
       title={t('title')}
-      icon={Gavel}
+      icon={GavelIcon}
       search={
         <SearchBar
           action={`/${locale}/judiciary`}

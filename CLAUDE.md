@@ -25,7 +25,7 @@ Full build plan: [docs/BUILD_PLAN.md](docs/BUILD_PLAN.md). Editorial register:
   Simple ≠ careless.
 - **Minimal UI.** Home = three search doors (People, Laws, Rights) + locality prompt. Progressive
   disclosure on profiles (essentials first). Ruthlessly cut any field that doesn't serve
-  *who / what law / what right*. Whitespace over density. Few colors, one type hierarchy.
+  _who / what law / what right_. Whitespace over density. Few colors, one type hierarchy.
 - **Search-first.** Each domain opens with a large, prominent search bar + rich filters.
 - **Accessible + localized by default.** Semantic HTML, ARIA, real per-language text (never text
   baked into images), clean reading order — from the first component. Every locale gets the same
@@ -46,19 +46,19 @@ privileged runtime surface. If a task seems to need auth, it belongs in the Git 
 
 ## Stack
 
-| Concern | Choice |
-|---|---|
-| Framework | Next.js 16 (App Router) + React 19, TypeScript |
-| Hosting | Vercel |
-| Database | Neon Postgres + `pgvector` |
-| ORM | Prisma 7 (`prisma/schema.prisma`) |
-| Styling | Tailwind CSS v4 (CSS-first config in `src/app/globals.css`) |
-| i18n | `next-intl`, 22 scheduled languages |
-| Maps | MapLibre GL + ECI/Delimitation GeoJSON |
-| Charts | D3 for hierarchy/org charts |
+| Concern   | Choice                                                             |
+| --------- | ------------------------------------------------------------------ |
+| Framework | Next.js 16 (App Router) + React 19, TypeScript                     |
+| Hosting   | Vercel                                                             |
+| Database  | Neon Postgres + `pgvector`                                         |
+| ORM       | Prisma 7 (`prisma/schema.prisma`)                                  |
+| Styling   | Tailwind CSS v4 (CSS-first config in `src/app/globals.css`)        |
+| i18n      | `next-intl`, 22 scheduled languages                                |
+| Maps      | MapLibre GL + ECI/Delimitation GeoJSON                             |
+| Charts    | D3 for hierarchy/org charts                                        |
 | Ingestion | GitHub Actions for heavy scraping; Vercel Cron only for light jobs |
-| Assistant | RAG over pgvector + a small LLM API |
-| Tests | Vitest |
+| Assistant | RAG over pgvector + a small LLM API                                |
+| Tests     | Vitest                                                             |
 
 Node is pinned to the version in `.nvmrc` (22). Package manager is **pnpm**.
 
@@ -74,3 +74,11 @@ Node is pinned to the version in `.nvmrc` (22). Package manager is **pnpm**.
   `next lint` is gone — run `pnpm lint` (ESLint flat config).
 - Secondary sources (PRS, MyNeta) may cross-check but never stand alone as a citation
   (`Citation.isPrimary = false`).
+
+- search should work as people type search string
+- for mind-map, any additional details added to the map, should be smaller in size and faded
+- add zoom to mind map and as user zooms in, the details reveal themselves and become normal size
+- pagination for people and laws section where we will load data only once they click that page
+- search results of home page should be fixed
+- mobile ui redesign
+- profile data

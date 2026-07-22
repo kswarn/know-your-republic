@@ -1,7 +1,11 @@
 import { getTranslations } from 'next-intl/server';
 
-import type { LucideIcon } from 'lucide-react';
-import type { ReactNode } from 'react';
+import type { ComponentType, ReactNode } from 'react';
+
+// Most domain icons are lucide-react components, but a section may supply a custom
+// image-backed icon (e.g. a licensed asset) instead — both shapes only ever need to
+// accept `className` and `aria-hidden` here.
+type DomainIcon = ComponentType<{ className?: string; 'aria-hidden'?: boolean | 'true' | 'false' }>;
 
 /**
  * The common frame for a domain landing page: icon + title, one line of scope, a
@@ -15,7 +19,7 @@ export async function DomainShell({
   children,
 }: {
   title: string;
-  icon: LucideIcon;
+  icon: DomainIcon;
   search?: ReactNode;
   children?: ReactNode;
 }) {
@@ -26,7 +30,7 @@ export async function DomainShell({
       <header>
         <div className="flex items-center gap-4">
           <span className="border-rule bg-paper-raised inline-flex size-14 shrink-0 items-center justify-center rounded-full border">
-            <Icon aria-hidden="true" className="text-ink-muted size-7" />
+            <Icon aria-hidden="true" className="text-ink size-7" />
           </span>
           <h1 className="text-display font-semibold">{title}</h1>
         </div>

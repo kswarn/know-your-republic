@@ -74,7 +74,7 @@ export default async function PersonDetailPage({
       <header className="space-y-3">
         <div className="flex items-center gap-3">
           <span className="border-rule bg-paper-raised inline-flex size-10 shrink-0 items-center justify-center rounded-full border">
-            <Landmark aria-hidden="true" className="text-ink-muted size-5" />
+            <Landmark aria-hidden="true" className="text-ink size-5" />
           </span>
           <h1 className="text-display font-semibold">{person.fullName}</h1>
         </div>

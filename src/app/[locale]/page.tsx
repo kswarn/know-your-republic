@@ -30,7 +30,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
           <section key={key} aria-labelledby={`door-${key}`}>
             <div className="flex items-center gap-3">
               <span className="border-rule bg-paper-raised inline-flex size-10 shrink-0 items-center justify-center rounded-full border">
-                <Icon aria-hidden="true" className="text-ink-muted size-5" />
+                <Icon aria-hidden="true" className="text-ink size-5" />
               </span>
               <h2 id={`door-${key}`} className="text-title font-semibold">
                 <Link href={href} className="text-ink hover:text-accent no-underline">
@@ -49,7 +49,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       >
         <div className="flex items-center gap-3">
           <span className="border-rule bg-paper-raised inline-flex size-10 shrink-0 items-center justify-center rounded-full border">
-            <MapPin aria-hidden="true" className="text-ink-muted size-5" />
+            <MapPin aria-hidden="true" className="text-ink size-5" />
           </span>
           <h2 id="locality" className="text-title font-semibold">
             {t('locality.heading')}

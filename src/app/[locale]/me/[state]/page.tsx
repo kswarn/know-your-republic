@@ -77,7 +77,7 @@ export default async function StatePage({
 
       <header className="flex items-center gap-3">
         <span className="border-rule bg-paper-raised inline-flex size-10 shrink-0 items-center justify-center rounded-full border">
-          <MapPin aria-hidden="true" className="text-ink-muted size-5" />
+          <MapPin aria-hidden="true" className="text-ink size-5" />
         </span>
         <h1 className="text-display font-semibold">{jurisdiction.name}</h1>
       </header>
