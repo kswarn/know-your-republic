@@ -1,3 +1,4 @@
+import { ScrollText } from 'lucide-react';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import type { Metadata } from 'next';
 
@@ -20,7 +21,7 @@ export default async function LawsPage({ params }: { params: Promise<{ locale: s
   const s = await getTranslations('home.doors.laws');
 
   return (
-    <DomainShell title={t('title')} description={t('description')}
+    <DomainShell title={t('title')} icon={ScrollText}
       search={
         <SearchBar
           action={`/${locale}/laws`}

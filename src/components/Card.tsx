@@ -1,6 +1,6 @@
-import type { ReactNode } from 'react';
+import type { ReactNode } from "react";
 
-import { Link } from '@/i18n/navigation';
+import { Link } from "@/i18n/navigation";
 
 /**
  * The one container in the kit. A record summary, optionally the whole thing a link.

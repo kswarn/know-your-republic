@@ -10,7 +10,7 @@
     "laws": "Laws",
     "rights": "Rights",
     "judiciary": "Judiciary",
-    "me": "My area",
+    "me": "States",
     "skipToContent": "Skip to main content",
     "language": "Language",
     "chooseLanguage": "Choose a language"
@@ -65,9 +65,41 @@
       "description": "Judges of the Supreme Court and the High Courts, with their biographies."
     },
     "me": {
-      "title": "My area",
+      "title": "States",
       "description": "Every representative responsible for where you live."
     }
+  },
+  "rightCategory": {
+    "EQUALITY": "Right to Equality",
+    "FREEDOM": "Right to Freedom",
+    "AGAINST_EXPLOITATION": "Right Against Exploitation",
+    "FREEDOM_OF_RELIGION": "Right to Freedom of Religion",
+    "CULTURAL_EDUCATIONAL": "Cultural and Educational Rights",
+    "CONSTITUTIONAL_REMEDIES": "Right to Constitutional Remedies",
+    "DIRECTIVE_PRINCIPLE": "Directive Principle",
+    "STATUTORY": "Statutory Right"
+  },
+  "rights": {
+    "appliesTo": "Applies to",
+    "backToRights": "Back to Rights"
+  },
+  "me": {
+    "mapHeading": "Select a state or union territory",
+    "mapDescription": "Click an area on the map to see who represents it.",
+    "backToMap": "Back to map",
+    "noResults": "No representatives have been ingested for {state} yet."
+  },
+  "people": {
+    "tabs": {
+      "hierarchy": "Hierarchy",
+      "people": "People"
+    },
+    "hierarchyHeading": "How the Union Government is organised",
+    "hierarchyDescription": "The Prime Minister and the Cabinet Ministers of the Union Council of Ministers, as currently constituted. Hover a point to see who holds it; click to open that person's page.",
+    "hierarchyEmpty": "The government hierarchy has not been ingested yet.",
+    "backToPeople": "Back to People",
+    "positions": "Positions",
+    "party": "Party"
   },
   "record": {
     "sources": "Sources",

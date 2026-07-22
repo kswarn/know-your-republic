@@ -63,7 +63,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
             {t('locality.heading')}
           </h2>
         </div>
-        <div className="mt-5 max-w-measure">
+        <div className="mt-5">
           <SearchBar
             action={`/${locale}/me`}
             name="where"
@@ -71,9 +71,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
             placeholder={t('locality.placeholder')}
           />
         </div>
-        <p className="text-small text-ink-muted mt-3 max-w-measure">
-          {t('locality.description')}
-        </p>
+        <p className="text-small text-ink-muted mt-3">{t('locality.description')}</p>
       </section>
     </div>
   );

@@ -3,6 +3,7 @@ import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 
 import { LanguageSwitcher } from './LanguageSwitcher';
+import { NavLink } from './NavLink';
 
 const SECTIONS = [
   { href: '/people', key: 'people' },
@@ -24,13 +25,9 @@ export async function SiteHeader() {
         </Link>
         <nav aria-label={site('name')} className="flex flex-wrap items-center gap-x-5 gap-y-2">
           {SECTIONS.map(({ href, key }) => (
-            <Link
-              key={href}
-              href={href}
-              className="text-ink-muted hover:text-accent text-small no-underline"
-            >
+            <NavLink key={href} href={href}>
               {t(key)}
-            </Link>
+            </NavLink>
           ))}
           <LanguageSwitcher />
         </nav>

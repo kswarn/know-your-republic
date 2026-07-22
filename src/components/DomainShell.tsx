@@ -1,20 +1,21 @@
 import { getTranslations } from 'next-intl/server';
 
+import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 /**
- * The common frame for a domain landing page: title, one line of scope, a prominent
- * search bar, then results. Phase 0 ships the frame with an honest empty state —
- * records appear here only once they carry an official source.
+ * The common frame for a domain landing page: icon + title, one line of scope, a
+ * prominent search bar, then results. Phase 0 ships the frame with an honest empty
+ * state — records appear here only once they carry an official source.
  */
 export async function DomainShell({
   title,
-  description,
+  icon: Icon,
   search,
   children,
 }: {
   title: string;
-  description: string;
+  icon: LucideIcon;
   search?: ReactNode;
   children?: ReactNode;
 }) {
@@ -23,8 +24,12 @@ export async function DomainShell({
   return (
     <div className="space-y-8">
       <header>
-        <h1 className="text-display font-semibold">{title}</h1>
-        <p className="text-body text-ink-muted mt-3 max-w-measure">{description}</p>
+        <div className="flex items-center gap-4">
+          <span className="border-rule bg-paper-raised inline-flex size-14 shrink-0 items-center justify-center rounded-full border">
+            <Icon aria-hidden="true" className="text-ink-muted size-7" />
+          </span>
+          <h1 className="text-display font-semibold">{title}</h1>
+        </div>
       </header>
 
       {search}

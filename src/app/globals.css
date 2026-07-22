@@ -33,8 +33,8 @@
   --color-flag: #b3261e;
   --color-flag-soft: #fbeaea;
 
-  /* Brand: the wordmark only — an orangish-red, distinct from the flag's cooler red. */
-  --color-brand: #d9481f;
+  /* Brand: the wordmark only — a deep purple, distinct from blue/green/red's meanings. */
+  --color-brand: #6b3fa0;
 
   /*
    * One type hierarchy. Indic scripts have taller ascenders and deeper descenders

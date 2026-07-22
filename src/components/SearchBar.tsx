@@ -12,6 +12,13 @@ type SearchBarProps = {
   name?: string;
   defaultValue?: string;
   size?: 'large' | 'compact';
+  /**
+   * Extra query params to carry through the submission, e.g. `{ tab: 'people' }`.
+   * A GET form's `action` query string is discarded on submit and replaced by the
+   * form's own fields, so anything that must survive (like which tab is active)
+   * has to ride along as a hidden input instead.
+   */
+  hiddenFields?: Record<string, string>;
 };
 
 /**
@@ -26,12 +33,17 @@ export function SearchBar({
   name = 'q',
   defaultValue,
   size = 'large',
+  hiddenFields,
 }: SearchBarProps) {
   const t = useTranslations('search');
   const id = `search-${action.replace(/\W+/g, '-')}`;
 
   return (
     <form action={action} role="search" className="w-full">
+      {hiddenFields &&
+        Object.entries(hiddenFields).map(([key, value]) => (
+          <input key={key} type="hidden" name={key} value={value} />
+        ))}
       <label htmlFor={id} className="sr-only">
         {label}
       </label>
