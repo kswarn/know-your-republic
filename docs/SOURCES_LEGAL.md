@@ -1,0 +1,46 @@
+# Source terms of use & licensing
+
+Checked 2026-07-21, ahead of writing the first adapter. This is a working legal note,
+not a substitute for counsel — flag anything below marked **needs review** before
+scaling ingestion past the Phase 0 proof-of-pipeline adapter.
+
+## Method
+
+For each source: read `robots.txt` with a normal browser user agent, look for a
+published terms-of-use / copyright page, and note whether the site's own
+infrastructure blocks simple automated requests regardless of what `robots.txt` says
+(a WAF or bot-detection layer is a practical constraint even where the policy text
+would allow scraping).
+
+## Per-source findings
+
+| Source | robots.txt | Practical access | Licensing note |
+|---|---|---|---|
+| **India Code** (indiacode.nic.in) | Allows crawling except `/discover`, `/simple-search`, `/statistics`, `/contact`, `/feedback`, `/forgot`, `/login`, `/register` — item pages (`/handle/...`) are **not** disallowed. | Homepage responds to a plain HTTP client; **item/detail pages currently return 403 or time out** for both this tool's fetcher and a bare `curl` with a browser user-agent. Reads as bot-detection (WAF/JS challenge) on deep pages rather than a stated prohibition. | Statutes are government works; the site does not publish a separate restrictive license for the text itself. **Needs review**: confirm the reprint/redistribution terms on the site's own "About/Copyright" page once a page load succeeds, and budget engineering time for a headless-browser or session-aware fetch before Phase 2 bulk ingestion. |
+| **Digital Sansad** (sansad.in) | No `robots.txt` found (404) — no crawl restriction stated. | Not yet load-tested against detail pages (MP profiles, bill trackers). | **Needs review** before first ingestion run — check for a terms/API page; sansad.in is the primary source for MP profiles and bill status, so this blocks Phase 1/2 people + laws ingestion, not Phase 0. |
+| **PRS Legislative Research** (prsindia.org) | Reachable; redirects present, no disallow observed for content pages. | Secondary source only per the build plan — used to cross-check, never as the sole citation. | Confirm attribution requirements if any PRS summary text is quoted rather than paraphrased. |
+| **MyNeta / ADR** (myneta.info) | `robots.txt` present (200), no blanket disallow observed. | Secondary/cross-check source only, per the build plan. | Standard affidavit-data reuse; attribute as "ADR/MyNeta" per their stated convention (confirm exact wording when first used). |
+| **data.gov.in** (OGD Platform India) | Reachable via redirect; has a published API. | Prefer the official API over scraping HTML — this is the one source in the table with a documented, sanctioned bulk-access path. | **GODL-India** (Government Open Data License – India) applies. Attribution text to carry wherever OGD data is displayed: *"Data sourced from the Open Government Data (OGD) Platform India, data.gov.in, under the Government Open Data License – India (GODL-India)."* |
+| **PIB** (pib.gov.in) | Reachable; redirect present, no disallow observed for release pages. | Used only to confirm current office-holders — low request volume, no bulk scraping planned. | Government press releases; no separate restrictive license expected. |
+| **Election Commission of India** (eci.gov.in) | Returned 403 to a plain request. | **Needs review** — bot-detection observed even at the root; will need the same treatment as India Code before the Phase 3 locator work (constituency GeoJSON, current members) begins. | GODL-India likely applies to ECI open datasets specifically (as opposed to the general eci.gov.in site) — confirm before ingesting delimitation GeoJSON. |
+| **Supreme Court of India** (sci.gov.in) | `robots.txt` present (200), no blanket disallow observed. | Judges + biography pages only, per the guardrail that judiciary content never includes case data. | No separate license stated; treat as a standard government work. |
+| **High Courts / Dept. of Justice** (doj.gov.in and per-HC sites) | Not yet checked individually — 25 separate sites. | **Needs review per state**, rolled out alongside the state-by-state ingestion plan in Phase 1/2, not all at once. | Check each HC site's own terms before its adapter ships. |
+| **State portals** (e.g. karnataka.gov.in, kla.kar.nic.in) | Not yet checked. | **Needs review**, first for Karnataka per the plan's "prove the pattern on one state first" approach. | Check before the first state adapter (Phase 1/2). |
+
+## What this means for the adapter contract
+
+- Every adapter in `src/lib/sources/` must be written to **fail closed**: if a fetch
+  returns anything other than a clean 200 with the expected shape, the adapter must
+  throw rather than insert a partial or guessed record. A blocked request is not a
+  "no data" signal to paper over.
+- Adapters must identify themselves with a descriptive `User-Agent` (not a browser
+  impersonation string) so that any source operator can identify and rate-limit this
+  project's traffic rather than mistake it for anonymous scraping traffic.
+- Where a site's practical access is currently blocked (India Code detail pages, ECI
+  root), Phase 0/1 seeding may use a manually verified record (URL and content
+  confirmed correct by a human, via search-engine cache or direct browser check) while
+  the automated-fetch path is built out — the `Citation.sourceUrl` must still resolve
+  to the real, correct official page.
+- Re-review this note before Phase 2's bulk state-by-state ingestion, and again before
+  Phase 4's scheduled auto-currency polling — both meaningfully increase request
+  volume against sources marked "needs review" above.

@@ -1,0 +1,112 @@
+{
+  "site": {
+    "name": "Know Your Republic",
+    "tagline": "Who governs you, what the laws are, and what rights you hold.",
+    "description": "A civic reference directory for India. Every fact carries a link to its official source."
+  },
+  "nav": {
+    "home": "Home",
+    "people": "People",
+    "laws": "Laws",
+    "rights": "Rights",
+    "judiciary": "Judiciary",
+    "me": "My area",
+    "skipToContent": "Skip to main content",
+    "language": "Language",
+    "chooseLanguage": "Choose a language"
+  },
+  "home": {
+    "heading": "Know Your Republic",
+    "intro": "A reference directory of the people who govern India, the laws in force, and the rights every citizen holds. Every explained fact links to its official source.",
+    "doors": {
+      "people": {
+        "title": "People & Government",
+        "description": "Every public servant from your ward to the Union government — their role, responsibilities, contact, and the laws they sponsored.",
+        "searchLabel": "Search for a representative, minister, or judge",
+        "searchPlaceholder": "Name, constituency, or office"
+      },
+      "laws": {
+        "title": "Laws",
+        "description": "Central and state bills and Acts, each with a plain-language explanation and a link to the official text.",
+        "searchLabel": "Search bills and Acts",
+        "searchPlaceholder": "Title, subject, or year"
+      },
+      "rights": {
+        "title": "Rights",
+        "description": "Every right a citizen holds, explained in full, with its constitutional or statutory citation.",
+        "searchLabel": "Search rights",
+        "searchPlaceholder": "Equality, information, education"
+      }
+    },
+    "locality": {
+      "heading": "Start from where you live",
+      "description": "Enter an address or PIN code to see every representative responsible for your area — from your ward to the Union government.",
+      "label": "Address or PIN code",
+      "placeholder": "e.g. 560011, or Jayanagar, Bengaluru",
+      "submit": "Find my representatives",
+      "comingSoon": "Area lookup is not available yet."
+    }
+  },
+  "domain": {
+    "people": {
+      "title": "People & Government",
+      "description": "Public servants from local bodies to the Union government."
+    },
+    "laws": {
+      "title": "Laws",
+      "description": "Bills and Acts of the Union and the states."
+    },
+    "rights": {
+      "title": "Rights",
+      "description": "Constitutional and statutory rights, explained in full."
+    },
+    "judiciary": {
+      "title": "Judiciary",
+      "description": "Judges of the Supreme Court and the High Courts, with their biographies."
+    },
+    "me": {
+      "title": "My area",
+      "description": "Every representative responsible for where you live."
+    }
+  },
+  "record": {
+    "sources": "Sources",
+    "source": "Source",
+    "officialText": "Official text",
+    "lastVerified": "Last verified {date}",
+    "notVerified": "Not yet verified",
+    "secondarySource": "Cross-check only",
+    "reportError": "Report an error in this record"
+  },
+  "translation": {
+    "unreviewed": "Unreviewed translation",
+    "unreviewedExplanation": "This page was machine-translated from English and has not yet been checked by a human reviewer. The English version is authoritative.",
+    "viewInEnglish": "Read in English"
+  },
+  "tts": {
+    "listen": "Listen to this page",
+    "stop": "Stop reading",
+    "unsupported": "Your browser does not support reading this page aloud."
+  },
+  "search": {
+    "submit": "Search",
+    "filters": "Filters",
+    "clearFilters": "Clear filters",
+    "noResults": "No records match your search.",
+    "resultCount": "{count, plural, =0 {No records} =1 {1 record} other {# records}}"
+  },
+  "empty": {
+    "heading": "Nothing here yet",
+    "body": "This section is being built. Records appear only once they carry an official source."
+  },
+  "footer": {
+    "sourcing": "Every explained fact in this directory links to an official government source. Records are updated in place; the date shown is when the record was last verified.",
+    "notNews": "This is a reference directory, not a news service.",
+    "corrections": "Found an error? Report it — no account needed."
+  },
+  "error": {
+    "notFoundTitle": "Page not found",
+    "notFoundBody": "There is no record at this address.",
+    "backHome": "Return to the directory"
+  }
+}

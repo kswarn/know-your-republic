@@ -1,0 +1,445 @@
+// Know Your Republic — Prisma schema
+// Implements the data model in the build plan (Section 4).
+// DB: PostgreSQL (Neon). Requires the `pgvector` extension for the assistant's retrieval.
+//
+// Design rules encoded here:
+//  - A Position carries BOTH a Jurisdiction (geographic) and an Institution (office).
+//    That pairing is what makes the residential -> nation locator a single query.
+//  - Judiciary is NOT a separate model: a judge is a Person holding a judicial
+//    Position at a COURT Institution.
+//  - Hierarchy is expressed only via the HierarchyEdge join (for org charts).
+//  - A Law is one model for both bills and Acts, distinguished by `status`.
+//  - Citation is polymorphic: every explained fact links its official source.
+//  - Nothing reaches PUBLISHED without at least one Citation (enforced in src/lib/publish.ts).
+//
+// Natural keys: every model an adapter writes carries a unique constraint on its
+// source-derived identity, so re-running an adapter updates in place instead of
+// inserting duplicates. That is what makes "auto-updates change records in place,
+// no feed" actually implementable.
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+  // Required to declare `extensions = [vector]` on the datasource below.
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+// Prisma 7: the connection URL lives in prisma.config.ts, not here.
+datasource db {
+  provider   = "postgresql"
+  extensions = [vector] // pgvector, for the assistant's retrieval (DocChunk.embedding)
+}
+
+// ---------------------------------------------------------------------------
+// ENUMS
+// ---------------------------------------------------------------------------
+
+enum GovLevel {
+  NATIONAL
+  STATE
+  CITY
+  LOCAL
+}
+
+enum JurisdictionType {
+  NATION
+  STATE
+  UT
+  CITY
+  DISTRICT
+  LOK_SABHA_CONSTITUENCY
+  ASSEMBLY_CONSTITUENCY
+  WARD
+}
+
+enum InstitutionType {
+  MINISTRY
+  DEPARTMENT
+  LEGISLATIVE_HOUSE // Lok Sabha, Rajya Sabha, state assemblies/councils
+  EXECUTIVE_OFFICE // PMO, CMO
+  COURT // Supreme Court, High Courts (judges only)
+  LOCAL_BODY // municipal corporation, panchayat
+}
+
+enum RoleType {
+  HEAD_OF_GOVERNMENT // PM, CM
+  MINISTER
+  LEGISLATOR // MP, MLA, MLC
+  JUDGE
+  CIVIL_SERVANT
+  LOCAL_REPRESENTATIVE // corporator, panchayat member
+}
+
+enum LawKind {
+  BILL
+  ACT
+}
+
+enum LawStatus {
+  INTRODUCED
+  PASSED
+  ENACTED
+  AMENDED
+  REPEALED
+}
+
+enum LawLevel {
+  CENTRAL
+  STATE
+}
+
+enum RightCategory {
+  EQUALITY // Art 14-18
+  FREEDOM // Art 19-22
+  AGAINST_EXPLOITATION // Art 23-24
+  FREEDOM_OF_RELIGION // Art 25-28
+  CULTURAL_EDUCATIONAL // Art 29-30
+  CONSTITUTIONAL_REMEDIES // Art 32
+  DIRECTIVE_PRINCIPLE
+  STATUTORY // RTI, consumer, labour, education, etc.
+}
+
+// Editorial publish gate for any plain-language content.
+enum PublishStatus {
+  DRAFT
+  IN_REVIEW
+  PUBLISHED
+}
+
+// Translation review state (machine vs human-reviewed).
+enum TranslationStatus {
+  MACHINE // show "unreviewed translation" flag
+  REVIEWED
+}
+
+enum CorrectionStatus {
+  OPEN
+  RESOLVED
+  REJECTED
+}
+
+// Entities that can be cited / translated / corrected (polymorphic target).
+enum EntityType {
+  PERSON
+  POSITION
+  INSTITUTION
+  JURISDICTION
+  LAW
+  RIGHT
+}
+
+// ---------------------------------------------------------------------------
+// CORE ENTITIES
+// ---------------------------------------------------------------------------
+
+model Party {
+  id           String   @id @default(cuid())
+  name         String   @unique
+  abbreviation String?
+  symbolUrl    String?
+  persons      Person[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Person {
+  id          String        @id @default(cuid())
+  fullName    String
+  photoUrl    String?
+  bio         String? // plain-but-professional; publish-gated
+  bioStatus   PublishStatus @default(DRAFT)
+  dateOfBirth DateTime?
+  party       Party?        @relation(fields: [partyId], references: [id])
+  partyId     String?
+
+  // contact
+  officeAddress String?
+  phone         String?
+  email         String?
+  officialUrl   String? // official page / verified handle
+
+  // Stable identity from the primary source (e.g. "digitalsansad:4713").
+  // The idempotency key for ingestion.
+  sourceKey String? @unique
+
+  tenures       Tenure[]
+  sponsoredLaws LawSponsor[]
+
+  lastVerifiedAt DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([fullName])
+  @@index([partyId])
+}
+
+model Institution {
+  id                String          @id @default(cuid())
+  name              String
+  type              InstitutionType
+  description       String? // roles/responsibilities of the office; publish-gated
+  descriptionStatus PublishStatus   @default(DRAFT)
+
+  // an institution may sit under a parent institution (dept under ministry)
+  parent   Institution?  @relation("InstitutionTree", fields: [parentId], references: [id])
+  parentId String?
+  children Institution[] @relation("InstitutionTree")
+
+  // an institution is anchored to a jurisdiction (e.g. a state assembly -> that state)
+  jurisdiction   Jurisdiction? @relation(fields: [jurisdictionId], references: [id])
+  jurisdictionId String?
+
+  positions Position[]
+
+  // Laws whose passage this institution sponsored (e.g. Ministry of Finance).
+  sponsoredLaws Law[] @relation("LawSponsoringInstitution")
+
+  lastVerifiedAt DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@unique([name, jurisdictionId])
+  @@index([type])
+  @@index([jurisdictionId])
+}
+
+model Jurisdiction {
+  id    String           @id @default(cuid())
+  name  String
+  type  JurisdictionType
+  level GovLevel
+
+  // hierarchy of place: ward -> assembly const -> ... -> state -> nation
+  parent   Jurisdiction?  @relation("JurisdictionTree", fields: [parentId], references: [id])
+  parentId String?
+  children Jurisdiction[] @relation("JurisdictionTree")
+
+  // geometry stored as GeoJSON text (or migrate to PostGIS later).
+  // Powers address/PIN -> jurisdiction resolution for the locator.
+  boundaryGeoJson String? @db.Text
+
+  positions    Position[]
+  institutions Institution[]
+  lawsInEffect Law[]         @relation("LawJurisdiction")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([type, name, parentId])
+  @@index([type])
+  @@index([parentId])
+}
+
+model Position {
+  id                     String        @id @default(cuid())
+  title                  String // e.g. "Union Minister of Finance", "MLA, Shivajinagar"
+  roleType               RoleType
+  responsibilities       String? // publish-gated plain-language description
+  responsibilitiesStatus PublishStatus @default(DRAFT)
+
+  // office + geographic scope: the two together power the locator
+  institution    Institution   @relation(fields: [institutionId], references: [id])
+  institutionId  String
+  jurisdiction   Jurisdiction? @relation(fields: [jurisdictionId], references: [id])
+  jurisdictionId String?
+
+  tenures Tenure[]
+
+  // hierarchy edges (org chart) — this position as superior / subordinate
+  edgesAsSuperior    HierarchyEdge[] @relation("Superior")
+  edgesAsSubordinate HierarchyEdge[] @relation("Subordinate")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([title, institutionId, jurisdictionId])
+  @@index([roleType])
+  @@index([institutionId])
+  @@index([jurisdictionId])
+}
+
+// Person <-> Position over time, preserving history. Current holder = isCurrent.
+model Tenure {
+  id         String    @id @default(cuid())
+  person     Person    @relation(fields: [personId], references: [id], onDelete: Cascade)
+  personId   String
+  position   Position  @relation(fields: [positionId], references: [id], onDelete: Cascade)
+  positionId String
+  startDate  DateTime?
+  endDate    DateTime?
+  isCurrent  Boolean   @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([personId, positionId, startDate])
+  @@index([personId])
+  @@index([positionId])
+  @@index([isCurrent])
+}
+
+// Reporting relationship between positions, used to draw org charts / mind maps.
+model HierarchyEdge {
+  id            String   @id @default(cuid())
+  superior      Position @relation("Superior", fields: [superiorId], references: [id], onDelete: Cascade)
+  superiorId    String
+  subordinate   Position @relation("Subordinate", fields: [subordinateId], references: [id], onDelete: Cascade)
+  subordinateId String
+  relationLabel String? // e.g. "reports to", "part of cabinet of"
+
+  @@unique([superiorId, subordinateId])
+  @@index([superiorId])
+  @@index([subordinateId])
+}
+
+// One model for bills and Acts; distinguished by `kind` + `status`.
+model Law {
+  id          String    @id @default(cuid())
+  title       String
+  kind        LawKind
+  status      LawStatus
+  level       LawLevel
+  subjectArea String?
+  year        Int?
+
+  officialTextUrl String        @unique // link to India Code / assembly — required, and the ingestion key
+  plainSummary    String? // plain-but-professional explainer; publish-gated
+  summaryStatus   PublishStatus @default(DRAFT)
+
+  // for state laws: which state jurisdiction; for effect scope generally
+  jurisdictions Jurisdiction[] @relation("LawJurisdiction")
+
+  sponsoringInstitution   Institution? @relation("LawSponsoringInstitution", fields: [sponsoringInstitutionId], references: [id])
+  sponsoringInstitutionId String?
+  sponsors                LawSponsor[]
+
+  relatedRights Right[] @relation("RightRelatedLaw")
+
+  lastVerifiedAt DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([kind])
+  @@index([status])
+  @@index([level])
+  @@index([year])
+  @@index([subjectArea])
+  @@index([sponsoringInstitutionId])
+}
+
+model LawSponsor {
+  id       String @id @default(cuid())
+  law      Law    @relation(fields: [lawId], references: [id], onDelete: Cascade)
+  lawId    String
+  person   Person @relation(fields: [personId], references: [id], onDelete: Cascade)
+  personId String
+
+  @@unique([lawId, personId])
+  @@index([personId])
+}
+
+model Right {
+  id                String        @id @default(cuid())
+  slug              String        @unique // stable editorial key, e.g. "right-to-equality"
+  title             String
+  category          RightCategory
+  articleCitation   String? // e.g. "Articles 14-18" or the statute reference
+  officialSourceUrl String // legislative.gov.in / India Code — required
+  plainExplanation  String? // detailed plain-but-professional; publish-gated
+  explanationStatus PublishStatus @default(DRAFT)
+  appliesTo         String? // who it applies to
+
+  relatedLawId String?
+  relatedLaw   Law?    @relation("RightRelatedLaw", fields: [relatedLawId], references: [id])
+
+  lastVerifiedAt DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([category])
+  @@index([relatedLawId])
+}
+
+// ---------------------------------------------------------------------------
+// CROSS-CUTTING: CITATIONS, TRANSLATIONS, CORRECTIONS, ASSISTANT RETRIEVAL
+// ---------------------------------------------------------------------------
+
+// Polymorphic citation: every explained fact must have >= 1 of these to publish.
+model Citation {
+  id         String     @id @default(cuid())
+  entityType EntityType
+  entityId   String
+  field      String? // which field this citation backs (e.g. "plainSummary")
+
+  sourceName  String // e.g. "India Code", "Digital Sansad"
+  sourceUrl   String
+  isPrimary   Boolean  @default(true) // secondary (PRS/MyNeta) = false, cross-check only
+  retrievedAt DateTime @default(now())
+
+  createdAt DateTime @default(now())
+
+  // Re-running an adapter refreshes retrievedAt instead of piling up duplicates.
+  @@unique([entityType, entityId, field, sourceUrl])
+  @@index([entityType, entityId])
+}
+
+// Per-field, per-language content. Machine translations carry the flag until reviewed.
+model Translation {
+  id           String            @id @default(cuid())
+  entityType   EntityType
+  entityId     String
+  field        String // which field is translated (bio, plainSummary, plainExplanation, title...)
+  languageCode String // ISO code among the 22 scheduled languages
+  text         String            @db.Text
+  status       TranslationStatus @default(MACHINE)
+  reviewedBy   String?
+  reviewedAt   DateTime?
+
+  // Hash of the source-language text this was translated from. When the English
+  // changes, the hash stops matching and the translation is known to be stale.
+  sourceHash String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([entityType, entityId, field, languageCode])
+  @@index([languageCode, status])
+}
+
+// Public, no-login correction requests.
+model Correction {
+  id             String           @id @default(cuid())
+  entityType     EntityType
+  entityId       String
+  message        String           @db.Text
+  status         CorrectionStatus @default(OPEN)
+  resolutionNote String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([entityType, entityId])
+  @@index([status])
+}
+
+// Retrieval chunks for the grounded assistant (pgvector). Only PUBLISHED, sourced
+// content is embedded, so the assistant can only answer from sourced material.
+model DocChunk {
+  id           String     @id @default(cuid())
+  entityType   EntityType
+  entityId     String
+  languageCode String     @default("en")
+  content      String     @db.Text
+  sourceUrl    String // the official citation to surface with any answer using this chunk
+  chunkIndex   Int        @default(0)
+
+  // pgvector column; dimension depends on the embedding model.
+  // The HNSW index is created by raw SQL in the migration — Prisma cannot express it.
+  embedding Unsupported("vector(1536)")?
+
+  createdAt DateTime @default(now())
+
+  @@unique([entityType, entityId, languageCode, chunkIndex])
+  @@index([entityType, entityId])
+  @@index([languageCode])
+}

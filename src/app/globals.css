@@ -1,0 +1,117 @@
+@import 'tailwindcss';
+
+/*
+ * Design tokens.
+ *
+ * The brief is a restrained reference document, not an app: paper and ink, a
+ * handful of semantic colours used with intent, one type hierarchy. Anything
+ * decorative that does not help a reader find who governs them, what a law says,
+ * or what right they hold does not belong here.
+ *
+ * A single, committed light theme — off-white paper, #323232 ink. Blue carries
+ * interaction (links, focus, search), green marks a verified/sourced state, red
+ * marks a warning (an unreviewed translation, an unsourced fact that must never
+ * render). Each is used for exactly that meaning, nowhere else.
+ */
+
+@theme {
+  --color-paper: #faf9f6;
+  --color-paper-raised: #ffffff;
+  --color-ink: #323232;
+  --color-ink-muted: #6b6b67;
+  --color-rule: #e3e1da;
+
+  /* Blue: interaction. */
+  --color-accent: #1d5fbf;
+  --color-accent-soft: #e8f0fb;
+
+  /* Green: a fact is verified / sourced. */
+  --color-success: #1e7a46;
+  --color-success-soft: #e7f5ec;
+
+  /* Red: a warning — unreviewed translation, or a fact with no citation. */
+  --color-flag: #b3261e;
+  --color-flag-soft: #fbeaea;
+
+  /* Brand: the wordmark only — an orangish-red, distinct from the flag's cooler red. */
+  --color-brand: #d9481f;
+
+  /*
+   * One type hierarchy. Indic scripts have taller ascenders and deeper descenders
+   * than Latin, so line heights are generous throughout.
+   */
+  --text-display: 2.75rem;
+  --text-display--line-height: 1.15;
+  --text-display--letter-spacing: -0.02em;
+  --text-title: 1.75rem;
+  --text-title--line-height: 1.25;
+  --text-heading: 1.25rem;
+  --text-heading--line-height: 1.35;
+  --text-body: 1.0625rem;
+  --text-body--line-height: 1.65;
+  --text-small: 0.9375rem;
+  --text-small--line-height: 1.55;
+  --text-meta: 0.8125rem;
+  --text-meta--line-height: 1.5;
+
+  --font-sans:
+    var(--font-script), 'Noto Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  /* A reading measure, not an app width. */
+  --container-measure: 38rem;
+  /* Close to the full browser viewport width, not a narrow reading column. */
+  --container-page: 90rem;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+    text-rendering: optimizeLegibility;
+  }
+
+  /*
+   * A single, visible focus treatment everywhere. Keyboard and screen-reader users
+   * are a first-class audience for a civic directory, not an afterthought.
+   */
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  ::selection {
+    background-color: var(--color-accent-soft);
+  }
+
+  /* Nastaliq needs far more vertical room than any other script we ship. */
+  [lang='ur'],
+  [lang='ks'] {
+    line-height: 2.1;
+  }
+}
+
+@layer utilities {
+  /* Visible only to assistive technology, until focused. */
+  .skip-link {
+    position: absolute;
+    inset-inline-start: 0.5rem;
+    top: -100%;
+    z-index: 50;
+    background-color: var(--color-paper-raised);
+    color: var(--color-ink);
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--color-rule);
+  }
+
+  .skip-link:focus {
+    top: 0.5rem;
+  }
+}
