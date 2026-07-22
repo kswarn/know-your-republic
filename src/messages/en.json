@@ -7,7 +7,7 @@
   "nav": {
     "home": "Home",
     "people": "People",
-    "laws": "Laws",
+    "laws": "Constitution",
     "rights": "Rights",
     "judiciary": "Judiciary",
     "me": "States",
@@ -26,10 +26,8 @@
         "searchPlaceholder": "Name, constituency, or office"
       },
       "laws": {
-        "title": "Laws",
-        "description": "Central and state bills and Acts, each with a plain-language explanation and a link to the official text.",
-        "searchLabel": "Search bills and Acts",
-        "searchPlaceholder": "Title, subject, or year"
+        "title": "Constitution",
+        "description": "The Constitution of India, explained plainly, with the official text in multiple languages."
       },
       "rights": {
         "title": "Rights",
@@ -53,8 +51,8 @@
       "description": "Public servants from local bodies to the Union government."
     },
     "laws": {
-      "title": "Laws",
-      "description": "Bills and Acts of the Union and the states."
+      "title": "Constitution",
+      "description": "The Constitution of India — the country's supreme law."
     },
     "rights": {
       "title": "Rights",
@@ -83,6 +81,26 @@
     "appliesTo": "Applies to",
     "backToRights": "Back to Rights"
   },
+  "laws": {
+    "backToLaws": "Back to Constitution",
+    "relatedRights": "Related rights"
+  },
+  "constitution": {
+    "description": "The Constitution of India is the country's supreme law. Adopted by the Constituent Assembly on 26 November 1949 and in force since 26 January 1950, it establishes the structure of the Union and state governments, divides powers between them, and sets out the fundamental rights and duties of every citizen. Every other law, and every act of government, must conform to it. With the amendments made since 1950, it is the longest written constitution of any sovereign nation.",
+    "contentsHeading": "What it contains",
+    "contentsIntro": "The Constitution is organised into a Preamble, 22 Parts (some since repealed or renumbered), and 12 Schedules, comprising nearly 470 Articles as amended. Its major divisions:",
+    "partColumn": "Part",
+    "subjectColumn": "Subject",
+    "downloadsHeading": "Read the Constitution",
+    "downloadsIntro": "The official text, published by the Legislative Department, Ministry of Law and Justice — free to view or download.",
+    "languageColumn": "Language",
+    "fileColumn": "File",
+    "viewDownload": "View / download PDF",
+    "pendingLanguages": "Editions in the remaining scheduled languages will be added here as official texts are verified."
+  },
+  "judiciary": {
+    "courtLabel": "Court"
+  },
   "me": {
     "mapHeading": "Select a state or union territory",
     "mapDescription": "Click an area on the map to see who represents it.",
@@ -99,7 +117,9 @@
     "hierarchyEmpty": "The government hierarchy has not been ingested yet.",
     "backToPeople": "Back to People",
     "positions": "Positions",
-    "party": "Party"
+    "party": "Party",
+    "responsibilities": "Responsibilities of this position",
+    "lawsIntroduced": "Laws introduced"
   },
   "record": {
     "sources": "Sources",

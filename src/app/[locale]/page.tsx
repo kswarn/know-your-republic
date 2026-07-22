@@ -38,14 +38,6 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                 </Link>
               </h2>
             </div>
-            <div className="mt-4">
-              <SearchBar
-                action={`/${locale}${href}`}
-                label={t(`doors.${key}.searchLabel`)}
-                placeholder={t(`doors.${key}.searchPlaceholder`)}
-                size="compact"
-              />
-            </div>
             <p className="text-small text-ink-muted mt-3">{t(`doors.${key}.description`)}</p>
           </section>
         ))}

@@ -18,6 +18,9 @@ async function getPerson(slug: string) {
         where: { isCurrent: true },
         include: { position: { include: { institution: true, jurisdiction: true } } },
       },
+      sponsoredLaws: {
+        include: { law: true },
+      },
     },
   });
   if (!person) return null;
@@ -26,7 +29,11 @@ async function getPerson(slug: string) {
     where: { entityType: 'PERSON', entityId: person.id, isPrimary: true },
   });
 
-  return { person, citations };
+  const sponsoredLaws = person.sponsoredLaws
+    .map((sponsor) => sponsor.law)
+    .filter((law) => law.summaryStatus === 'PUBLISHED');
+
+  return { person, citations, sponsoredLaws };
 }
 
 export async function generateMetadata(props: {
@@ -51,7 +58,7 @@ export default async function PersonDetailPage({
 
   const found = await getPerson(slug);
   if (!found) notFound();
-  const { person, citations } = found;
+  const { person, citations, sponsoredLaws } = found;
 
   const p = await getTranslations('people');
 
@@ -89,6 +96,14 @@ export default async function PersonDetailPage({
               <li key={tenure.id} className="border-rule border-s-2 ps-3">
                 <p className="text-body font-medium">{tenure.position.title}</p>
                 <p className="text-small text-ink-muted">{tenure.position.institution.name}</p>
+                {tenure.position.responsibilities && (
+                  <div className="mt-1">
+                    <p className="text-meta text-ink-muted font-medium">{p('responsibilities')}</p>
+                    <p className="text-small whitespace-pre-line">
+                      {tenure.position.responsibilities}
+                    </p>
+                  </div>
+                )}
               </li>
             ))}
           </ul>
@@ -96,6 +111,23 @@ export default async function PersonDetailPage({
       )}
 
       {person.bio && <p className="text-body whitespace-pre-line">{person.bio}</p>}
+
+      {sponsoredLaws.length > 0 && (
+        <section aria-labelledby="laws-introduced-heading">
+          <h2 id="laws-introduced-heading" className="text-heading font-semibold">
+            {p('lawsIntroduced')}
+          </h2>
+          <ul className="mt-2 space-y-1">
+            {sponsoredLaws.map((law) => (
+              <li key={law.id}>
+                <Link href={`/laws/${law.id}`} className="text-accent underline underline-offset-2">
+                  {law.title}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <div className="border-rule space-y-2 border-t pt-4">
         <SourceLink citations={citations} />

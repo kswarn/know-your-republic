@@ -2,9 +2,11 @@ import 'dotenv/config';
 
 import { PrismaNeon } from '@prisma/adapter-neon';
 
+import { CENTRAL_ACTS } from '../content/laws/central-acts';
 import { FUNDAMENTAL_RIGHTS } from '../content/rights/fundamental-rights';
 import { PrismaClient } from '@/generated/prisma';
 import { seedGeographyAndInstitutions } from '@/lib/content/geography';
+import { seedSupremeCourt } from '@/lib/content/judiciary';
 import { seedUnionCabinet } from '@/lib/content/nationalLeadership';
 import { upsertFundamentalRight } from '@/lib/content/rights';
 import { normalizeIndiaCodeRecord, upsertLaw } from '@/lib/sources/indiacode';
@@ -50,6 +52,26 @@ async function seedFundamentalRights(db: PrismaClient) {
   }
 }
 
+async function seedCentralActs(db: PrismaClient) {
+  for (const seed of CENTRAL_ACTS) {
+    const record = normalizeIndiaCodeRecord({
+      officialTextUrl: seed.officialTextUrl,
+      title: seed.title,
+      year: seed.year,
+      subjectArea: seed.subjectArea,
+    });
+    const law = await upsertLaw(db, record, { plainSummary: seed.plainSummary, publish: true });
+    console.log(`Seeded Law ${law.id}: "${law.title}" (${law.summaryStatus})`);
+
+    if (seed.relatedRightSlug) {
+      await db.right.updateMany({
+        where: { slug: seed.relatedRightSlug },
+        data: { relatedLawId: law.id },
+      });
+    }
+  }
+}
+
 async function main() {
   const connectionString = process.env.DATABASE_URL;
   if (!connectionString) throw new Error('DATABASE_URL is not set.');
@@ -58,6 +80,7 @@ async function main() {
 
   await seedIndiaCodeLaw(db);
   await seedFundamentalRights(db);
+  await seedCentralActs(db);
 
   const geo = await seedGeographyAndInstitutions(db);
   console.log(
@@ -70,6 +93,9 @@ async function main() {
     `Seeded Union Cabinet: PM + ${cabinet.ministerCount} Cabinet Ministers, ` +
       `${cabinet.positionCount} ministerial Positions.`,
   );
+
+  const scJudges = await seedSupremeCourt(db);
+  console.log(`Seeded Supreme Court: ${scJudges.judgeCount} judges (incl. CJI).`);
 
   await db.$disconnect();
 }
