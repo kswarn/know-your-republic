@@ -306,7 +306,9 @@ export function OverviewMap({ people }: { people: RepresentativePoint[] }) {
         const id = feature?.id;
         const stnameSh = feature?.properties?.STNAME_SH as string | undefined;
 
-        if (stnameSh) {
+        // Touch devices have no real hover — a text box trailing a tap would
+        // just be in the way of the tap-to-navigate this map promises.
+        if (stnameSh && canHover) {
           const name = jurisdictionNameForFeature(stnameSh);
           const count = stateFilteredCountsRef.current.get(name) ?? 0;
           setHoverLabel({ name, count, x: e.point.x, y: e.point.y });

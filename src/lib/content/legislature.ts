@@ -51,6 +51,9 @@ function normalizePersonName(name: string): string {
  */
 const MANUAL_NAME_OVERRIDES: Record<string, string> = {
   'sansad-rs:2426': 'pmindia:subrahmanyam-jaishankar', // "S. Jaishankar"
+  'sansad-ls:5551': 'pmindia:piyush-goyal', // "Piyush Vedprakash Goyal"
+  'sansad-ls:4134': 'pmindia:rajiv-ranjan-singh', // "Rajiv Ranjan Singh" vs. cabinet's "Rajiv Ranjan Singh (Lalan Singh)"
+  'sansad-ls:4452': 'pmindia:cr-patil', // "Chandrakant Raghunath Patil"
 };
 
 async function upsertPartyCached(

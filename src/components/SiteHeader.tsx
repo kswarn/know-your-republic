@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 
 import { Link } from "@/i18n/navigation";
@@ -29,11 +30,12 @@ export async function SiteHeader() {
       <div className="mx-auto flex w-full max-w-page items-center justify-between gap-4 px-4 py-4">
         <Link
           href="/"
-          className="text-brand text-heading font-semibold no-underline"
+          className="text-brand flex items-center gap-2 text-heading font-semibold no-underline"
         >
+          <Image src="/location.png" alt="" width={24} height={24} className="size-[1em]" />
           {site("name")}
         </Link>
-        <nav aria-label={site("name")} className="flex items-center">
+        <nav aria-label={site("name")} className="flex items-center gap-4">
           <MobileNav
             links={links}
             languageSwitcher={<LanguageSwitcher />}

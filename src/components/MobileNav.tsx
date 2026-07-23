@@ -6,10 +6,17 @@ import { useState } from 'react';
 import { usePathname } from '@/i18n/navigation';
 
 /**
- * Below `md`, the nav links + language switcher collapse behind a hamburger
- * toggle instead of wrapping onto a second row — the server-rendered links and
- * switcher are passed in as-is (both are already client components themselves;
- * this just controls which layout shows them and when).
+ * Below `md`, the nav links collapse behind a hamburger toggle instead of
+ * wrapping onto a second row — the server-rendered links are passed in as-is.
+ * The language switcher is rendered exactly once, always visible (not
+ * duplicated between a desktop row and a mobile panel) — two elements both
+ * carrying the switcher's `id="language-switcher"` would be invalid HTML, and
+ * on some mobile browsers can make label/focus association pick the wrong
+ * (hidden) instance.
+ *
+ * On the home page, the nav links are skipped entirely: they're the exact
+ * same five sections already shown as cards in the page body, so repeating
+ * them here would just be a second, redundant way to reach the same thing.
  */
 export function MobileNav({
   links,
@@ -24,6 +31,7 @@ export function MobileNav({
 }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const isHome = pathname === '/';
 
   // Close the panel on navigation rather than leaving it open over the new page —
   // adjusting state during render (React's recommended pattern for this) rather
@@ -34,10 +42,14 @@ export function MobileNav({
     setOpen(false);
   }
 
+  if (isHome) {
+    return <div className="flex items-center">{languageSwitcher}</div>;
+  }
+
   return (
     <>
-      <div className="hidden items-center gap-x-5 gap-y-2 md:flex">
-        {links}
+      <div className="flex items-center gap-x-5">
+        <div className="hidden items-center gap-x-5 md:flex">{links}</div>
         {languageSwitcher}
       </div>
 
@@ -61,8 +73,7 @@ export function MobileNav({
           id="mobile-nav-panel"
           className="border-rule bg-paper absolute inset-x-0 top-full z-20 flex flex-col gap-4 border-t p-4 md:hidden"
         >
-          <div className="flex flex-col gap-4">{links}</div>
-          {languageSwitcher}
+          {links}
         </div>
       )}
     </>

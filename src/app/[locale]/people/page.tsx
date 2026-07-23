@@ -9,6 +9,7 @@ import { LastVerified } from '@/components/LastVerified';
 import { SearchBar } from '@/components/SearchBar';
 import { SourceLink } from '@/components/SourceLink';
 import { db } from '@/lib/db';
+import { parseFilterValues, toggleFilterValue } from '@/lib/filterToggle';
 import { personSlug } from '@/lib/people';
 
 export async function generateMetadata(props: {
@@ -19,12 +20,12 @@ export async function generateMetadata(props: {
   return { title: t('title'), description: t('description') };
 }
 
-const CHAMBERS = ['all', 'government', 'lok-sabha', 'rajya-sabha'] as const;
+const CHAMBERS = ['government', 'lok-sabha', 'rajya-sabha'] as const;
 type Chamber = (typeof CHAMBERS)[number];
 
 const PAGE_SIZE = 24;
 
-/** Prisma's Position.roleType/institution filter for a given chamber tab. */
+/** Prisma's Position.roleType/institution filter for a given chamber. */
 function chamberWhere(chamber: Chamber) {
   switch (chamber) {
     case 'government':
@@ -33,10 +34,6 @@ function chamberWhere(chamber: Chamber) {
       return { roleType: 'LEGISLATOR' as const, institution: { name: 'Lok Sabha' } };
     case 'rajya-sabha':
       return { roleType: 'LEGISLATOR' as const, institution: { name: 'Rajya Sabha' } };
-    case 'all':
-      return {
-        roleType: { in: ['HEAD_OF_GOVERNMENT' as const, 'MINISTER' as const, 'LEGISLATOR' as const] },
-      };
   }
 }
 
@@ -51,9 +48,8 @@ export default async function PeoplePage({
   const { q, chamber: chamberParam, page: pageParam } = await searchParams;
   setRequestLocale(locale);
 
-  const chamber: Chamber = (CHAMBERS as readonly string[]).includes(chamberParam ?? '')
-    ? (chamberParam as Chamber)
-    : 'all';
+  // An empty selection is "All" — no filter applied, not "match nothing".
+  const chambers = parseFilterValues<Chamber>(chamberParam, CHAMBERS);
   const currentPage = Math.max(1, Number(pageParam) || 1);
 
   const t = await getTranslations('domain.people');
@@ -66,7 +62,13 @@ export default async function PeoplePage({
     tenures: {
       // The People section covers the executive and the legislature — judges
       // have their own Judiciary section, never this one.
-      some: { isCurrent: true, position: chamberWhere(chamber) },
+      some: {
+        isCurrent: true,
+        position:
+          chambers.length > 0
+            ? { OR: chambers.map(chamberWhere) }
+            : { roleType: { in: ['HEAD_OF_GOVERNMENT' as const, 'MINISTER' as const, 'LEGISLATOR' as const] } },
+      },
     },
     ...(q
       ? {
@@ -111,6 +113,8 @@ export default async function PeoplePage({
     citationsByPerson.set(citation.entityId, list);
   }
 
+  const chamberQuery = (next: Chamber[]): Record<string, string> => (next.length > 0 ? { chamber: next.join(',') } : {});
+
   return (
     <DomainShell title={t('title')} icon={Landmark}>
       <div className="space-y-8">
@@ -119,19 +123,24 @@ export default async function PeoplePage({
           label={s('searchLabel')}
           placeholder={s('searchPlaceholder')}
           defaultValue={q}
-          hiddenFields={chamber !== 'all' ? { chamber } : {}}
+          hiddenFields={chamberQuery(chambers)}
         />
 
         <div className="flex flex-wrap gap-2" role="group" aria-label={search('filters')}>
+          <FilterChip
+            label={p('chambers.all')}
+            href={{ pathname: '/people', query: { ...(q ? { q } : {}) } }}
+            selected={chambers.length === 0}
+          />
           {CHAMBERS.map((key) => (
             <FilterChip
               key={key}
               label={p(`chambers.${key}`)}
               href={{
                 pathname: '/people',
-                query: { ...(key !== 'all' ? { chamber: key } : {}), ...(q ? { q } : {}) },
+                query: { ...chamberQuery(toggleFilterValue(chambers, key, CHAMBERS)), ...(q ? { q } : {}) },
               }}
-              selected={chamber === key}
+              selected={chambers.includes(key)}
             />
           ))}
         </div>
@@ -170,7 +179,7 @@ export default async function PeoplePage({
                   href={{
                     pathname: '/people',
                     query: {
-                      ...(chamber !== 'all' ? { chamber } : {}),
+                      ...chamberQuery(chambers),
                       ...(q ? { q } : {}),
                       page: String(Math.max(1, currentPage - 1)),
                     },
@@ -185,7 +194,7 @@ export default async function PeoplePage({
                   href={{
                     pathname: '/people',
                     query: {
-                      ...(chamber !== 'all' ? { chamber } : {}),
+                      ...chamberQuery(chambers),
                       ...(q ? { q } : {}),
                       page: String(Math.min(totalPages, currentPage + 1)),
                     },

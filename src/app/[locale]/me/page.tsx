@@ -53,7 +53,8 @@ export default async function MePage({ params }: { params: Promise<{ locale: str
         <h2 id="map-heading" className="text-heading font-semibold">
           {m('mapHeading')}
         </h2>
-        <p className="text-small text-ink-muted mt-1 max-w-measure">{m('mapDescription')}</p>
+        <p className="text-small text-ink-muted mt-1 hidden max-w-measure md:block">{m('mapDescription')}</p>
+        <p className="text-small text-ink-muted mt-1 max-w-measure md:hidden">{m('mapDescriptionTouch')}</p>
         <div className="mt-6">
           <OverviewMap people={representatives} />
         </div>

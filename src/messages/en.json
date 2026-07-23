@@ -6,7 +6,7 @@
   },
   "nav": {
     "home": "Home",
-    "people": "People",
+    "people": "Government",
     "laws": "Constitution",
     "rights": "Rights",
     "judiciary": "Judiciary",
@@ -24,7 +24,7 @@
     "intro": "A reference directory of the people who govern India, the laws in force, and the rights every citizen holds. Every explained fact links to its official source.",
     "doors": {
       "people": {
-        "title": "People & Government",
+        "title": "Government",
         "description": "Every public servant from your ward to the Union government: their role, responsibilities, contact, and the laws they sponsored.",
         "searchLabel": "Search for a representative, minister, or judge",
         "searchPlaceholder": "Name, constituency, or office"
@@ -51,7 +51,7 @@
   },
   "domain": {
     "people": {
-      "title": "People & Government",
+      "title": "Government",
       "description": "Public servants from local bodies to the Union government."
     },
     "laws": {
@@ -72,6 +72,7 @@
     }
   },
   "rightCategory": {
+    "all": "All",
     "EQUALITY": "Right to Equality",
     "FREEDOM": "Right to Freedom",
     "AGAINST_EXPLOITATION": "Right Against Exploitation",
@@ -108,6 +109,7 @@
   "me": {
     "mapHeading": "Every representative, at a glance",
     "mapDescription": "Every Minister and Member of Parliament currently in office, plotted near their state. Hover a dot to see who it is, click to open their profile, or click a state itself to see everyone who represents it.",
+    "mapDescriptionTouch": "Every Minister and Member of Parliament currently in office, plotted near their state. Tap a dot to open their profile, or tap a state itself to see everyone who represents it.",
     "backToMap": "Back to map",
     "noResults": "No representatives have been ingested for {state} yet.",
     "nationalZone": "National / Union",
@@ -127,7 +129,7 @@
     }
   },
   "people": {
-    "backToPeople": "Back to People",
+    "backToPeople": "Back to Government",
     "positions": "Positions",
     "party": "Party",
     "responsibilities": "Responsibilities of this position",
