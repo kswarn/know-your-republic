@@ -4,13 +4,15 @@ import { ChevronDown } from 'lucide-react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { useTranslations } from 'next-intl';
+import Image from 'next/image';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { jurisdictionNameForFeature } from '../../content/geography/geojson-name-map';
 import { Link, useRouter } from '@/i18n/navigation';
 import { spiralPack } from '@/lib/circlePack';
-import { featureCentroid, type MultiPolygonGeometry, type PolygonGeometry } from '@/lib/geoCentroid';
+import type { MultiPolygonGeometry, PolygonGeometry } from '@/lib/geoTypes';
 import { jurisdictionSlug } from '@/lib/geography';
+import { distributePoints } from '@/lib/pointInPolygon';
 import type { House, RepresentativePoint } from '@/lib/representatives';
 
 type ChamberFilter = 'all' | 'lok-sabha' | 'rajya-sabha';
@@ -31,16 +33,21 @@ const HOUSE_COLOR: Record<House, string> = {
   Government: '#1e7a46',
 };
 
-const DOT_SIZE = 8; // px diameter at 100% zoom
-const PACK_SPACING = 7; // px between spiral rings within one cluster, at 100% zoom
+const DOT_SIZE = 6; // px diameter
+const PACK_SPACING = 6; // px between spiral rings in the National/Union cluster
 // Fixed on-screen box for representatives with no single state (Union
 // Ministers, nominated Rajya Sabha members) — a fraction of container size so
-// it repositions correctly on resize, but never tied to map pan/zoom.
+// it repositions correctly on resize.
 const NATIONAL_ANCHOR_FRACTION = { x: 0.11, y: 0.14 };
 
-type HoverLabel = { name: string; x: number; y: number };
+type HoverLabel = { name: string; count: number; x: number; y: number };
 type TooltipState = { person: RepresentativePoint; anchorX: number; anchorY: number; transform: string };
-type PlacedDot = { person: RepresentativePoint; state: string | null; dx: number; dy: number };
+/** State dots sit at a real point inside their state's polygon (`map.project`
+ * places them correctly at any zoom/pan); National/Union dots have no
+ * geography, so they're a flat offset from a fixed on-screen anchor instead. */
+type PlacedDot =
+  | { person: RepresentativePoint; kind: 'state'; lng: number; lat: number }
+  | { person: RepresentativePoint; kind: 'national'; dx: number; dy: number };
 type GeoFeature = {
   properties: { STNAME_SH: string };
   geometry: PolygonGeometry | MultiPolygonGeometry;
@@ -72,22 +79,17 @@ function placeTooltip(dotRect: DOMRect, containerRect: DOMRect) {
   };
 }
 
-/** Packs one cluster's representatives into a flat spiral of offsets from its anchor. */
-function packCluster(people: RepresentativePoint[]): { person: RepresentativePoint; dx: number; dy: number }[] {
-  return spiralPack(people.length, PACK_SPACING).map((offset, i) => ({ person: people[i], ...offset }));
-}
-
 /**
  * The Overview map: India's outline (hover a state, click to open its detail
- * page — unchanged from before) with every Minister/MP plotted as a dot
- * clustered around their state's centroid, packed with a dependency-free
- * spiral so dense states (e.g. Uttar Pradesh's 80+ Lok Sabha MPs) still fan
- * out from a single anchor rather than overlapping into a solid blob.
+ * page — unchanged from before) with every Minister/MP plotted as a dot at a
+ * real point inside their state's own polygon — spread across its interior
+ * (`distributePoints`), not clustered at its centroid, so a dot never reads
+ * as belonging to a neighbouring state and dense states (Uttar Pradesh's 90+
+ * seats) still have room to breathe.
  *
- * Dot positions are written directly to each dot's DOM node on every map
- * 'move' event, bypassing React re-renders entirely — re-rendering ~800
- * React elements on every frame of a pan/zoom would visibly stutter, and
- * nothing about screen position needs to live in React state.
+ * Dot positions are written directly to each dot's DOM node (via refs) rather
+ * than kept in React state — re-rendering ~800 React elements on every filter
+ * change would be needless work when only their `transform` needs to move.
  */
 export function OverviewMap({ people }: { people: RepresentativePoint[] }) {
   const t = useTranslations('me');
@@ -100,16 +102,14 @@ export function OverviewMap({ people }: { people: RepresentativePoint[] }) {
 
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
-  const baseZoomRef = useRef(0);
   const dotRefs = useRef(new Map<string, HTMLDivElement>());
   const rafRef = useRef<number | null>(null);
   const router = useRouter();
 
   const [hoverLabel, setHoverLabel] = useState<HoverLabel | null>(null);
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
-  const [stateAnchors, setStateAnchors] = useState<Map<string, { lng: number; lat: number }> | null>(null);
+  const [statePointPools, setStatePointPools] = useState<Map<string, [number, number][]> | null>(null);
   const [mapReady, setMapReady] = useState(false);
-  const [zoomPercent, setZoomPercent] = useState(100);
   const [canHover] = useState(() => typeof window !== 'undefined' && window.matchMedia('(hover: hover)').matches);
 
   const [chamber, setChamber] = useState<ChamberFilter>('all');
@@ -120,6 +120,17 @@ export function OverviewMap({ people }: { people: RepresentativePoint[] }) {
     [people],
   );
 
+  // Every state's full (unfiltered) headcount — the point pool fetched below
+  // is sized to this, so it always has enough points for any filtered subset
+  // without needing to be recomputed when filters change.
+  const statePeopleCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const p of people) {
+      if (p.state) counts.set(p.state, (counts.get(p.state) ?? 0) + 1);
+    }
+    return counts;
+  }, [people]);
+
   const filtered = useMemo(() => {
     return people.filter((p) => {
       if (chamber === 'lok-sabha' && p.house !== 'Lok Sabha') return false;
@@ -129,7 +140,23 @@ export function OverviewMap({ people }: { people: RepresentativePoint[] }) {
     });
   }, [people, chamber, partyFilter]);
 
+  const stateFilteredCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const p of filtered) {
+      if (p.state) counts.set(p.state, (counts.get(p.state) ?? 0) + 1);
+    }
+    return counts;
+  }, [filtered]);
+  // The mousemove handler below is bound once, at map creation — routed
+  // through a ref for the same reason `reposition` is (see `repositionRef`),
+  // so the hover label always reflects the *current* filters' counts.
+  const stateFilteredCountsRef = useRef(stateFilteredCounts);
+  useEffect(() => {
+    stateFilteredCountsRef.current = stateFilteredCounts;
+  }, [stateFilteredCounts]);
+
   const placedDots = useMemo<PlacedDot[]>(() => {
+    if (!statePointPools) return [];
     const byState = new Map<string, RepresentativePoint[]>();
     const national: RepresentativePoint[] = [];
     for (const p of filtered) {
@@ -143,55 +170,49 @@ export function OverviewMap({ people }: { people: RepresentativePoint[] }) {
     }
     const result: PlacedDot[] = [];
     for (const [state, group] of byState) {
-      for (const placement of packCluster(group)) {
-        result.push({ state, ...placement });
-      }
+      const pool = statePointPools.get(state);
+      if (!pool) continue;
+      group.forEach((person, i) => {
+        const [lng, lat] = pool[i];
+        result.push({ person, kind: 'state', lng, lat });
+      });
     }
-    for (const placement of packCluster(national)) {
-      result.push({ state: null, ...placement });
-    }
+    spiralPack(national.length, PACK_SPACING).forEach((offset, i) => {
+      result.push({ person: national[i], kind: 'national', ...offset });
+    });
     return result;
-  }, [filtered]);
+  }, [filtered, statePointPools]);
 
   const reposition = useCallback(() => {
     const map = mapRef.current;
     const container = containerRef.current;
-    if (!map || !container || !stateAnchors) return;
-    const zoom = map.getZoom();
-    const scale = 2 ** (zoom - baseZoomRef.current);
-    setZoomPercent(Math.round(scale * 100));
+    if (!map || !container) return;
     const { width, height } = container.getBoundingClientRect();
     const nationalAnchor = { x: width * NATIONAL_ANCHOR_FRACTION.x, y: height * NATIONAL_ANCHOR_FRACTION.y };
 
-    for (const { person, state, dx, dy } of placedDots) {
-      const el = dotRefs.current.get(person.id);
+    for (const dot of placedDots) {
+      const el = dotRefs.current.get(dot.person.id);
       if (!el) continue;
       let x: number;
       let y: number;
-      if (state === null) {
-        x = nationalAnchor.x + dx;
-        y = nationalAnchor.y + dy;
+      if (dot.kind === 'national') {
+        x = nationalAnchor.x + dot.dx;
+        y = nationalAnchor.y + dot.dy;
       } else {
-        const anchor = stateAnchors.get(state);
-        if (!anchor) {
-          el.style.display = 'none';
-          continue;
-        }
-        const projected = map.project([anchor.lng, anchor.lat]);
-        x = projected.x + dx * scale;
-        y = projected.y + dy * scale;
+        // A real point inside the state's own polygon.
+        const projected = map.project([dot.lng, dot.lat]);
+        x = projected.x;
+        y = projected.y;
       }
-      el.style.display = '';
       el.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
     }
-  }, [placedDots, stateAnchors]);
+  }, [placedDots]);
 
-  // The map-creation effect below binds `scheduleReposition` to native map
-  // events exactly once, at mount. Routing every call through a ref (rather
-  // than depending on `reposition` directly) means that one-time binding
-  // always runs the *current* reposition logic — otherwise every pan/zoom
-  // after the first filter change would replay a stale, outdated closure and
-  // the zoom-% readout would silently stop updating.
+  // The map-creation effect below binds `scheduleReposition` to the resize
+  // observer exactly once, at mount. Routing every call through a ref
+  // (rather than depending on `reposition` directly) means that one-time
+  // binding always runs the *current* reposition logic after a filter change,
+  // not a stale closure from mount.
   const repositionRef = useRef(reposition);
   useEffect(() => {
     repositionRef.current = reposition;
@@ -206,25 +227,27 @@ export function OverviewMap({ people }: { people: RepresentativePoint[] }) {
   }, []);
 
   // Load state boundary geometry directly (not via MapLibre's internal
-  // source, which may tile/clip large GeoJSON) so centroids are computed
-  // from complete, unclipped geometry.
+  // source, which may tile/clip large GeoJSON) so each state's point pool is
+  // distributed across its complete, unclipped polygon — a dot computed from
+  // a clipped tile could land just outside the real boundary, in a
+  // neighbouring state.
   useEffect(() => {
     let cancelled = false;
     fetch('/geo/india-states.geojson')
       .then((res) => res.json())
       .then((data: { features: GeoFeature[] }) => {
         if (cancelled) return;
-        const anchors = new Map<string, { lng: number; lat: number }>();
+        const pools = new Map<string, [number, number][]>();
         for (const feature of data.features) {
           const name = jurisdictionNameForFeature(feature.properties.STNAME_SH);
-          anchors.set(name, featureCentroid(feature.geometry));
+          pools.set(name, distributePoints(feature.geometry, statePeopleCounts.get(name) ?? 0));
         }
-        setStateAnchors(anchors);
+        setStatePointPools(pools);
       });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [statePeopleCounts]);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -235,22 +258,22 @@ export function OverviewMap({ people }: { people: RepresentativePoint[] }) {
       bounds: INDIA_BOUNDS,
       fitBoundsOptions: { padding: 24 },
       attributionControl: false,
+      // A fixed reference view, not an explorable one: no pan, zoom, or
+      // rotate. Dots now spread across each state's own polygon instead of
+      // clustering at a point, so there's no crowding problem zoom would need
+      // to solve.
       scrollZoom: false,
       boxZoom: false,
       dragRotate: false,
+      dragPan: false,
       keyboard: false,
       doubleClickZoom: false,
+      touchZoomRotate: false,
       touchPitch: false,
-      // Buttons are the primary, discoverable zoom control (cursor/scroll
-      // zoom tested poorly); drag-to-pan and pinch-zoom stay on since
-      // they're standard, expected map gestures, especially on touch.
-      dragPan: true,
-      touchZoomRotate: true,
     });
     mapRef.current = map;
 
     map.on('load', () => {
-      baseZoomRef.current = map.getZoom();
       setMapReady(true);
 
       map.addSource('india', {
@@ -284,7 +307,9 @@ export function OverviewMap({ people }: { people: RepresentativePoint[] }) {
         const stnameSh = feature?.properties?.STNAME_SH as string | undefined;
 
         if (stnameSh) {
-          setHoverLabel({ name: jurisdictionNameForFeature(stnameSh), x: e.point.x, y: e.point.y });
+          const name = jurisdictionNameForFeature(stnameSh);
+          const count = stateFilteredCountsRef.current.get(name) ?? 0;
+          setHoverLabel({ name, count, x: e.point.x, y: e.point.y });
         }
 
         if (id === undefined || id === hoveredId) return;
@@ -309,15 +334,13 @@ export function OverviewMap({ people }: { people: RepresentativePoint[] }) {
       });
     });
 
-    map.on('move', scheduleReposition);
-    map.on('zoom', scheduleReposition);
-
+    const container = containerRef.current;
     const resizeObserver = new ResizeObserver(() => {
       map.resize();
       map.fitBounds(INDIA_BOUNDS, { padding: 24, duration: 0 });
       scheduleReposition();
     });
-    resizeObserver.observe(containerRef.current);
+    resizeObserver.observe(container);
 
     return () => {
       resizeObserver.disconnect();
@@ -327,8 +350,8 @@ export function OverviewMap({ people }: { people: RepresentativePoint[] }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- map is created once; scheduleReposition is re-subscribed via its own effect below
   }, [router]);
 
-  // Re-run whenever what needs repositioning changes (filters/groupBy, or the
-  // state anchors finishing their fetch) — covers the initial paint and every
+  // Re-run whenever what needs repositioning changes (filters, or the point
+  // pools finishing their fetch) — covers the initial paint and every
   // subsequent filter change, independent of map 'move' events.
   useEffect(() => {
     if (mapReady) reposition();
@@ -353,10 +376,6 @@ export function OverviewMap({ people }: { people: RepresentativePoint[] }) {
   );
   const handleDotLeave = useCallback(() => setTooltip(null), []);
 
-  function zoomBy(delta: number) {
-    mapRef.current?.zoomTo(mapRef.current.getZoom() + delta, { duration: 200 });
-  }
-
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end gap-x-6 gap-y-3">
@@ -368,11 +387,11 @@ export function OverviewMap({ people }: { people: RepresentativePoint[] }) {
         />
         <label className="text-small">
           <span className="text-ink-muted mb-1 block">{t('partyFilterLabel')}</span>
-          <span className="border-rule relative inline-flex border">
+          <span className="border-rule relative inline-flex h-9 border">
             <select
               value={partyFilter}
               onChange={(e) => setPartyFilter(e.target.value)}
-              className="text-body max-w-40 appearance-none bg-transparent py-2 ps-3 pe-8 outline-none"
+              className="max-w-40 appearance-none bg-transparent ps-3 pe-8 outline-none"
             >
               <option value="all">{t('allParties')}</option>
               {parties.map((party) => (
@@ -411,27 +430,7 @@ export function OverviewMap({ people }: { people: RepresentativePoint[] }) {
           }}
         />
 
-        <div className="border-rule bg-paper-raised absolute top-2 right-2 z-30 flex items-center gap-1 border px-1 py-1 shadow-sm">
-          <button
-            type="button"
-            onClick={() => zoomBy(-1)}
-            aria-label={t('zoomOut')}
-            className="text-ink hover:bg-accent-soft flex size-7 items-center justify-center text-lg leading-none"
-          >
-            −
-          </button>
-          <span className="text-meta text-ink-muted w-10 text-center tabular-nums">{zoomPercent}%</span>
-          <button
-            type="button"
-            onClick={() => zoomBy(1)}
-            aria-label={t('zoomIn')}
-            className="text-ink hover:bg-accent-soft flex size-7 items-center justify-center text-lg leading-none"
-          >
-            +
-          </button>
-        </div>
-
-        <span className="text-meta text-ink-muted absolute top-2 left-2 z-10 flex h-7 items-center font-semibold">
+        <span className="text-meta text-ink-muted absolute top-2 left-2 z-10 font-semibold">
           {t('nationalZone')}
         </span>
 
@@ -444,6 +443,7 @@ export function OverviewMap({ people }: { people: RepresentativePoint[] }) {
             style={{ left: hoverLabel.x, top: hoverLabel.y - 8 }}
           >
             {hoverLabel.name}
+            <span className="text-ink-muted"> · {t('resultCount', { count: hoverLabel.count })}</span>
           </div>
         )}
 
@@ -454,8 +454,16 @@ export function OverviewMap({ people }: { people: RepresentativePoint[] }) {
           >
             <div className="flex items-center gap-2">
               {tooltip.person.photoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element -- one tiny fixed-size preview at a time, not worth next/image's overhead here
-                <img src={tooltip.person.photoUrl} alt="" className="size-10 shrink-0 rounded-full object-cover" />
+                // next/image, not a raw <img>: source hosts like sansad.in reject
+                // the Referer header a browser-native cross-origin <img> request
+                // sends, but next/image's server-side fetch doesn't send one.
+                <Image
+                  src={tooltip.person.photoUrl}
+                  alt=""
+                  width={40}
+                  height={40}
+                  className="size-10 shrink-0 rounded-full object-cover"
+                />
               ) : (
                 <span aria-hidden="true" className="inline-block size-10 shrink-0 rounded-full" style={{ backgroundColor: HOUSE_COLOR[tooltip.person.house] }} />
               )}
@@ -524,7 +532,7 @@ function SegmentedControl<T extends string>({
   return (
     <div className="text-small">
       {label && <span className="text-ink-muted mb-1 block">{label}</span>}
-      <div className="border-rule inline-flex border" role="radiogroup" aria-label={label ?? undefined}>
+      <div className="border-rule inline-flex h-9 border" role="radiogroup" aria-label={label ?? undefined}>
         {options.map(({ value: v, label: optionLabel }, i) => (
           <button
             key={v}
@@ -532,7 +540,7 @@ function SegmentedControl<T extends string>({
             role="radio"
             aria-checked={value === v}
             onClick={() => onChange(v)}
-            className={`px-3 py-2 whitespace-nowrap transition-colors ${i > 0 ? 'border-rule border-s' : ''} ${
+            className={`flex items-center px-3 whitespace-nowrap transition-colors ${i > 0 ? 'border-rule border-s' : ''} ${
               value === v ? 'bg-accent-soft text-accent font-semibold' : 'text-ink-muted hover:text-ink'
             }`}
           >

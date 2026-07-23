@@ -3,9 +3,9 @@
 import { ChevronDown, Languages } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
-import { useTransition } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 
-import { ENABLED_LOCALES } from '@/i18n/locales';
+import { ENABLED_LOCALES, isReviewedLocale, localeMeta } from '@/i18n/locales';
 import { usePathname, useRouter } from '@/i18n/navigation';
 
 /**
@@ -28,8 +28,16 @@ export function LanguageSwitcher() {
   const pathname = usePathname();
   const params = useParams();
   const [isPending, startTransition] = useTransition();
+  const [toastLanguage, setToastLanguage] = useState<string | null>(null);
 
   const current = (params.locale as string) ?? 'en';
+
+  // Auto-dismiss — a toast that lingers forever stops being a toast.
+  useEffect(() => {
+    if (!toastLanguage) return;
+    const timer = setTimeout(() => setToastLanguage(null), 5000);
+    return () => clearTimeout(timer);
+  }, [toastLanguage]);
 
   return (
     <div className="relative w-40">
@@ -50,6 +58,7 @@ export function LanguageSwitcher() {
             // Keep the reader on the same record, just in another language.
             router.replace(pathname, { locale: next });
           });
+          if (!isReviewedLocale(next)) setToastLanguage(localeMeta(next).nativeName);
         }}
         className="border-rule bg-paper-raised text-ink text-small w-full appearance-none border py-2 ps-9 pe-8"
       >
@@ -64,6 +73,15 @@ export function LanguageSwitcher() {
         aria-hidden="true"
         className="text-ink-muted pointer-events-none absolute inset-y-0 inset-e-2 my-auto size-4"
       />
+
+      {toastLanguage && (
+        <div
+          role="status"
+          className="border-rule bg-paper-raised text-ink text-small fixed inset-x-4 bottom-4 z-50 mx-auto max-w-sm border px-4 py-3 shadow-md sm:inset-x-auto sm:inset-e-4"
+        >
+          {t('translationInProgress', { language: toastLanguage })}
+        </div>
+      )}
     </div>
   );
 }

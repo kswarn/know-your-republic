@@ -11,9 +11,7 @@ export type ConstitutionEdition = {
 };
 
 // Only editions with a verified, official (legislative.gov.in) PDF link ship here.
-// Kannada is intentionally not yet listed — searches turned up only an outdated
-// (2011, pre-multiple-amendment) third-party copy, not a current official one. See
-// docs/SOURCES_LEGAL.md for the sourcing attempt log.
+// See docs/SOURCES_LEGAL.md for the sourcing attempt log.
 export const CONSTITUTION_EDITIONS: ConstitutionEdition[] = [
   {
     languageCode: 'en',
@@ -24,6 +22,15 @@ export const CONSTITUTION_EDITIONS: ConstitutionEdition[] = [
     languageCode: 'hi',
     languageName: 'Hindi',
     fileUrl: 'https://www.legislative.gov.in/static/uploads/2025/07/ca7ce5c746fa7480804bbdeb6cb704f0.pdf',
+  },
+  {
+    // Same file as the English edition — a diglot (English–Kannada) printing,
+    // not a separate PDF. Confirmed by manual inspection (2026-07-23); the
+    // automated fetch used for English/Hindi couldn't verify this itself, see
+    // docs/SOURCES_LEGAL.md.
+    languageCode: 'kn',
+    languageName: 'Kannada',
+    fileUrl: 'https://www.legislative.gov.in/static/uploads/2025/07/359f70a69695affb9d72f8393102bd2e.pdf',
   },
 ];
 

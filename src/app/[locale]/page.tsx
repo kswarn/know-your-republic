@@ -1,12 +1,15 @@
-import { Landmark, ScrollText, ShieldCheck } from 'lucide-react';
+import { Landmark, MapPin, ScrollText, ShieldCheck } from 'lucide-react';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 
+import { GavelIcon } from '@/components/icons/GavelIcon';
 import { Link } from '@/i18n/navigation';
 
 const DOORS = [
   { key: 'people', href: '/people', Icon: Landmark },
   { key: 'laws', href: '/laws', Icon: ScrollText },
   { key: 'rights', href: '/rights', Icon: ShieldCheck },
+  { key: 'me', href: '/me', Icon: MapPin },
+  { key: 'judiciary', href: '/judiciary', Icon: GavelIcon },
 ] as const;
 
 export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
@@ -22,8 +25,8 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         <p className="text-body text-ink-muted mt-4 max-w-measure">{t('intro')}</p>
       </section>
 
-      {/* The three doors. Each is a section with its own search bar, not a tab or a
-          card grid — a reader arrives knowing which of the three questions they have. */}
+      {/* The five doors into the directory — a reader arrives already knowing which
+          of these questions they have. */}
       <div className="grid gap-14 md:grid-cols-3">
         {DOORS.map(({ key, href, Icon }) => (
           <section key={key} aria-labelledby={`door-${key}`}>

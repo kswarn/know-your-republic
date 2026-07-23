@@ -15,6 +15,7 @@
     "language": "Language",
     "chooseLanguage": "Choose a language",
     "moreLanguagesComingSoon": "More languages being added",
+    "translationInProgress": "Complete {language} translation will be available soon. Some content may still appear in English.",
     "openMenu": "Open menu",
     "closeMenu": "Close menu"
   },
@@ -37,6 +38,14 @@
         "description": "Every right a citizen holds, explained in full, with its constitutional or statutory citation.",
         "searchLabel": "Search rights",
         "searchPlaceholder": "Equality, information, education"
+      },
+      "me": {
+        "title": "Overview",
+        "description": "Every current Minister and Member of Parliament, plotted near their state — or find everyone who represents where you live."
+      },
+      "judiciary": {
+        "title": "Judiciary",
+        "description": "Judges of the Supreme Court and the High Courts, with their biographies."
       }
     }
   },
@@ -102,8 +111,6 @@
     "backToMap": "Back to map",
     "noResults": "No representatives have been ingested for {state} yet.",
     "nationalZone": "National / Union",
-    "zoomIn": "Zoom in",
-    "zoomOut": "Zoom out",
     "chamberOptions": {
       "all": "All",
       "lok-sabha": "Lok Sabha",

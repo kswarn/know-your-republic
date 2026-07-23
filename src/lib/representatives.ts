@@ -38,6 +38,12 @@ export function toRepresentativePoint(person: PersonWithTenures): Representative
   const house: House = lsTenure ? 'Lok Sabha' : rsTenure ? 'Rajya Sabha' : 'Government';
   const constituencyMatch = lsTenure?.position.title.match(CONSTITUENCY_PATTERN);
 
+  // A national-level jurisdiction (e.g. a Union Cabinet Minister's "India")
+  // isn't a state — leave `state` null so callers treat them the same as any
+  // other representative with no single state.
+  const jurisdiction = primaryTenure?.position.jurisdiction;
+  const state = jurisdiction && jurisdiction.level !== 'NATIONAL' ? jurisdiction.name : null;
+
   return {
     id: person.id,
     slug: personSlug(person.sourceKey),
@@ -46,7 +52,7 @@ export function toRepresentativePoint(person: PersonWithTenures): Representative
     partyName: person.party?.name ?? null,
     partyAbbreviation: person.party?.abbreviation ?? null,
     house,
-    state: primaryTenure?.position.jurisdiction?.name ?? null,
+    state,
     constituency: constituencyMatch?.[1] ?? null,
   };
 }
