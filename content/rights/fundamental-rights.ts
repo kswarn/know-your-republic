@@ -38,7 +38,7 @@ export const FUNDAMENTAL_RIGHTS: FundamentalRightSeed[] = [
       'The State may not deny any person equality before the law or the equal protection of the ' +
       'laws. This has two distinct guarantees: no person is above the law, and the law must treat ' +
       'people alike in like circumstances. The State may still classify people into groups for a ' +
-      'law to apply differently to each — a classification is permitted only where it rests on a ' +
+      'law to apply differently to each: a classification is permitted only where it rests on a ' +
       'real difference relevant to the purpose of the law.',
     officialSourceUrl: CONSTITUTION_URL,
   },
@@ -50,7 +50,7 @@ export const FUNDAMENTAL_RIGHTS: FundamentalRightSeed[] = [
     appliesTo: 'Citizens of India',
     plainExplanation:
       'The State may not discriminate against a citizen on grounds only of religion, race, caste, ' +
-      'sex, or place of birth — in access to shops, public restaurants, hotels, places of public ' +
+      'sex, or place of birth, in access to shops, public restaurants, hotels, places of public ' +
       'entertainment, or the use of wells, roads, and places of public resort maintained wholly or ' +
       'partly out of State funds. The State may make special provision for women, children, and for ' +
       'socially and educationally backward classes, Scheduled Castes, and Scheduled Tribes.',
@@ -107,7 +107,7 @@ export const FUNDAMENTAL_RIGHTS: FundamentalRightSeed[] = [
       'India; to reside and settle in any part of the territory of India; and to practise any ' +
       'profession, or carry on any occupation, trade, or business. The State may impose reasonable ' +
       'restrictions on each of these freedoms by law, on grounds the Constitution specifies for that ' +
-      'freedom — among them the sovereignty and integrity of India, State security, public order, ' +
+      'freedom, among them the sovereignty and integrity of India, State security, public order, ' +
       'decency, morality, and relations with foreign States.',
     officialSourceUrl: CONSTITUTION_URL,
   },
@@ -277,8 +277,8 @@ export const FUNDAMENTAL_RIGHTS: FundamentalRightSeed[] = [
     appliesTo: 'Every person whose Fundamental Rights have been violated',
     plainExplanation:
       'A person may move the Supreme Court directly to enforce the rights conferred by this part of ' +
-      'the Constitution, and the Supreme Court has the power to issue directions, orders, or writs — ' +
-      'including habeas corpus, mandamus, prohibition, quo warranto, and certiorari — for that ' +
+      'the Constitution, and the Supreme Court has the power to issue directions, orders, or writs, ' +
+      'including habeas corpus, mandamus, prohibition, quo warranto, and certiorari, for that ' +
       'purpose. Parliament may extend this power to any other court. Parliament may by law determine ' +
       'the extent to which the rights conferred by this part apply to members of the armed forces or ' +
       'forces charged with maintaining public order, and may provide for restricting or abrogating ' +

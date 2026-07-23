@@ -510,7 +510,7 @@ const DotOverlay = memo(function DotOverlay({ placedDots, registerDot, onDotHove
             onBlur={onDotLeave}
             className="block rounded-full transition-transform hover:z-20 hover:scale-125 focus-visible:z-20 focus-visible:scale-125"
             style={{ width: DOT_SIZE, height: DOT_SIZE, backgroundColor: HOUSE_COLOR[person.house] }}
-            aria-label={`${person.fullName} — ${person.partyAbbreviation ?? person.partyName ?? ''}, ${person.house}${person.state ? `, ${person.state}` : ''}`}
+            aria-label={`${person.fullName}, ${person.partyAbbreviation ?? person.partyName ?? ''}, ${person.house}${person.state ? `, ${person.state}` : ''}`}
           />
         </div>
       ))}

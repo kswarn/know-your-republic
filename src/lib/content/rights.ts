@@ -48,7 +48,7 @@ export async function upsertFundamentalRight(db: PrismaClient, seed: Fundamental
         entityType: 'RIGHT',
         entityId: right.id,
         field: 'plainExplanation',
-        sourceName: 'Constitution of India — Legislative Department',
+        sourceName: 'Constitution of India, Legislative Department',
         sourceUrl: seed.officialSourceUrl,
         isPrimary: true,
       },

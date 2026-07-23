@@ -32,7 +32,7 @@ export const CENTRAL_ACTS: CentralActSeed[] = [
       'fourteen years of age has the right to free and compulsory education at a neighbourhood ' +
       "school, until they complete elementary education. It fixes the appropriate government's " +
       'and local authority\'s duty to establish such schools, sets minimum norms a school must ' +
-      'meet — including a prescribed pupil-teacher ratio and infrastructure standards — and ' +
+      'meet (including a prescribed pupil-teacher ratio and infrastructure standards) and ' +
       'prohibits a school from holding back, expelling, or requiring a child to pass a board ' +
       'examination before completing elementary education.',
   },
@@ -45,8 +45,8 @@ export const CENTRAL_ACTS: CentralActSeed[] = [
     plainSummary:
       'This Act gives effect to Article 17 of the Constitution, which abolishes untouchability. ' +
       'It makes it an offence to enforce a religious or social disability on grounds of ' +
-      'untouchability — including refusing a person entry to a place of worship, a shop, a ' +
-      'restaurant, or a hospital, or refusing to sell goods or render a service — and prescribes ' +
+      'untouchability (including refusing a person entry to a place of worship, a shop, a ' +
+      'restaurant, or a hospital, or refusing to sell goods or render a service) and prescribes ' +
       'penalties for each such offence.',
   },
   {
@@ -58,8 +58,8 @@ export const CENTRAL_ACTS: CentralActSeed[] = [
       "This Act provides for the protection of a consumer's interests and establishes " +
       'authorities to resolve consumer disputes. It creates the Central Consumer Protection ' +
       'Authority, empowered to investigate and act against unfair trade practices and false or ' +
-      'misleading advertisements, and a three-tier Consumer Disputes Redressal Commission — at ' +
-      'district, state, and national level — where a consumer may file a complaint. It also ' +
+      'misleading advertisements, and a three-tier Consumer Disputes Redressal Commission (at ' +
+      'district, state, and national level) where a consumer may file a complaint. It also ' +
       'introduces liability for a manufacturer or seller of a defective product that causes harm.',
   },
   {

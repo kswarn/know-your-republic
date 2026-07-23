@@ -16,10 +16,10 @@
 
 export const AOB_RULES_SOURCE_URL =
   'https://cabsec.gov.in/writereaddata/allocationbusinessrule/completeaobrules/english/1_Upload_1187.pdf';
-export const AOB_RULES_SOURCE_NAME = 'Government of India (Allocation of Business) Rules, 1961 — Cabinet Secretariat';
+export const AOB_RULES_SOURCE_NAME = 'Government of India (Allocation of Business) Rules, 1961, Cabinet Secretariat';
 
 export const CONSTITUTION_SOURCE_URL = 'https://www.legislative.gov.in/constitution-of-india';
-export const CONSTITUTION_SOURCE_NAME = 'Constitution of India — Legislative Department';
+export const CONSTITUTION_SOURCE_NAME = 'Constitution of India, Legislative Department';
 
 export type ResponsibilitySeed = {
   positionTitle: string;
@@ -39,7 +39,7 @@ export const POSITION_RESPONSIBILITIES: ResponsibilitySeed[] = [
   {
     positionTitle: 'Prime Minister of India',
     responsibilities:
-      'Heads the Union government: chairs the Cabinet, leads and coordinates the work of every Ministry, and advises the President on the appointment of other ministers. The Prime Minister also directly holds any subject not otherwise allocated to a Minister — currently the Ministry of Personnel, Public Grievances and Pensions, the Department of Atomic Energy, and the Department of Space.',
+      'Heads the Union government: chairs the Cabinet, leads and coordinates the work of every Ministry, and advises the President on the appointment of other ministers. The Prime Minister also directly holds any subject not otherwise allocated to a Minister: currently the Ministry of Personnel, Public Grievances and Pensions, the Department of Atomic Energy, and the Department of Space.',
     sourceUrl: CONSTITUTION_SOURCE_URL,
     sourceName: CONSTITUTION_SOURCE_NAME,
   },

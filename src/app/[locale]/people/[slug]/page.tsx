@@ -109,9 +109,9 @@ export default async function PersonDetailPage({
                 <p className="text-small text-ink-muted">{tenure.position.institution.name}</p>
                 {tenure.position.responsibilities &&
                   tenure.position.responsibilitiesStatus === 'PUBLISHED' && (
-                  <div className="mt-1">
-                    <p className="text-meta text-ink-muted font-medium">{p('responsibilities')}</p>
-                    <p className="text-small whitespace-pre-line">
+                  <div className="mt-4">
+                    <p className="text-small text-ink font-semibold">{p('responsibilities')}</p>
+                    <p className="text-small mt-1 whitespace-pre-line">
                       {tenure.position.responsibilities}
                     </p>
                   </div>

@@ -22,7 +22,7 @@
 
 export const KARNATAKA_HC_SOURCE_URL =
   'https://en.wikipedia.org/wiki/List_of_sitting_judges_of_the_high_courts_of_India';
-export const KARNATAKA_HC_SOURCE_NAME = 'Wikipedia — List of sitting judges of the high courts of India';
+export const KARNATAKA_HC_SOURCE_NAME = 'Wikipedia, List of sitting judges of the high courts of India';
 
 export type KarnatakaHCJudgeSeed = {
   fullName: string;

@@ -28,7 +28,7 @@ export async function SourceLink({ citations: rawCitations }: { citations: Citat
       <p className="text-meta text-flag inline-flex items-center gap-1.5">
         {/* Should be unreachable: see assertPublishable in src/lib/publish.ts */}
         <TriangleAlert aria-hidden="true" className="size-4" />
-        Unsourced — not publishable.
+        Unsourced. Not publishable.
       </p>
     );
   }

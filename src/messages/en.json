@@ -25,7 +25,7 @@
     "doors": {
       "people": {
         "title": "People & Government",
-        "description": "Every public servant from your ward to the Union government — their role, responsibilities, contact, and the laws they sponsored.",
+        "description": "Every public servant from your ward to the Union government: their role, responsibilities, contact, and the laws they sponsored.",
         "searchLabel": "Search for a representative, minister, or judge",
         "searchPlaceholder": "Name, constituency, or office"
       },
@@ -41,7 +41,7 @@
       },
       "me": {
         "title": "Overview",
-        "description": "Every current Minister and Member of Parliament, plotted near their state — or find everyone who represents where you live."
+        "description": "Every current Minister and Member of Parliament, plotted near their state, or find everyone who represents where you live."
       },
       "judiciary": {
         "title": "Judiciary",
@@ -56,7 +56,7 @@
     },
     "laws": {
       "title": "Constitution",
-      "description": "The Constitution of India — the country's supreme law."
+      "description": "The Constitution of India, the country's supreme law."
     },
     "rights": {
       "title": "Rights",
@@ -96,7 +96,7 @@
     "partColumn": "Part",
     "subjectColumn": "Subject",
     "downloadsHeading": "Read the Constitution",
-    "downloadsIntro": "The official text, published by the Legislative Department, Ministry of Law and Justice — free to view or download.",
+    "downloadsIntro": "The official text, published by the Legislative Department, Ministry of Law and Justice, free to view or download.",
     "languageColumn": "Language",
     "fileColumn": "File",
     "viewDownload": "View / download PDF",
@@ -107,7 +107,7 @@
   },
   "me": {
     "mapHeading": "Every representative, at a glance",
-    "mapDescription": "Every Minister and Member of Parliament currently in office, plotted near their state. Hover a dot to see who it is, click to open their profile — or click a state itself to see everyone who represents it.",
+    "mapDescription": "Every Minister and Member of Parliament currently in office, plotted near their state. Hover a dot to see who it is, click to open their profile, or click a state itself to see everyone who represents it.",
     "backToMap": "Back to map",
     "noResults": "No representatives have been ingested for {state} yet.",
     "nationalZone": "National / Union",
@@ -175,7 +175,7 @@
   },
   "footer": {
     "sourcing": "Every explained fact in this directory links to an official government source. Records are updated in place; the date shown is when the record was last verified.",
-    "corrections": "Found an error? Report it — no account needed."
+    "corrections": "Found an error? Report it. No account needed."
   },
   "error": {
     "notFoundTitle": "Page not found",
