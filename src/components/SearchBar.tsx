@@ -1,73 +1,100 @@
 'use client';
 
 import { Search } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useRouter } from 'next/navigation';
+import { useEffect, useRef, useState, useTransition } from 'react';
 
 type SearchBarProps = {
   /** Visible-to-AT label. Never rely on the placeholder alone. */
   label: string;
   placeholder: string;
-  /** Route the GET form submits to, e.g. "/people". */
+  /** The locale-prefixed route results render on, e.g. `/${locale}/people`. */
   action: string;
   name?: string;
   defaultValue?: string;
   size?: 'large' | 'compact';
   /**
-   * Extra query params to carry through the submission, e.g. `{ tab: 'people' }`.
-   * A GET form's `action` query string is discarded on submit and replaced by the
-   * form's own fields, so anything that must survive (like which tab is active)
-   * has to ride along as a hidden input instead.
+   * Extra query params to carry through every update, e.g. `{ tab: 'people' }` —
+   * so the active tab survives a search rather than resetting to the default.
    */
   hiddenFields?: Record<string, string>;
 };
 
 /**
- * A plain GET form. Deliberately not a controlled, JS-driven combobox: search must
- * work with JavaScript unavailable or still loading, produce a shareable URL, and
- * stay usable on a slow connection.
+ * Results update as the reader types (debounced, non-blocking) rather than waiting
+ * for a submit — the query string is still the source of truth (shareable,
+ * bookmarkable, and the page's own server-side filtering is unchanged), so this
+ * only changes *when* the URL updates, not the data flow. It stays a real GET
+ * form underneath: with JavaScript unavailable, pressing Enter still submits it
+ * and produces the same URL a live update would have.
  */
 export function SearchBar({
   label,
   placeholder,
   action,
   name = 'q',
-  defaultValue,
+  defaultValue = '',
   size = 'large',
   hiddenFields,
 }: SearchBarProps) {
-  const t = useTranslations('search');
+  const router = useRouter();
+  const [value, setValue] = useState(defaultValue);
+  const [, startTransition] = useTransition();
   const id = `search-${action.replace(/\W+/g, '-')}`;
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  useEffect(() => () => clearTimeout(debounceRef.current), []);
+
+  function scheduleUpdate(nextValue: string) {
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      const params = new URLSearchParams(hiddenFields);
+      if (nextValue) params.set(name, nextValue);
+      const query = params.toString();
+      startTransition(() => {
+        router.replace(query ? `${action}?${query}` : action, { scroll: false });
+      });
+    }, 300);
+  }
 
   return (
-    <form action={action} role="search" className="w-full">
+    <form
+      action={action}
+      role="search"
+      className="w-full"
+      onSubmit={(e) => e.preventDefault()}
+    >
       {hiddenFields &&
-        Object.entries(hiddenFields).map(([key, value]) => (
-          <input key={key} type="hidden" name={key} value={value} />
+        Object.entries(hiddenFields).map(([key, fieldValue]) => (
+          <input key={key} type="hidden" name={key} value={fieldValue} />
         ))}
       <label htmlFor={id} className="sr-only">
         {label}
       </label>
-      <div className="border-rule bg-paper-raised focus-within:border-accent flex items-stretch border transition-colors">
+      <div className="border-rule bg-paper-raised focus-within:border-ink relative flex items-stretch border transition-colors">
+        <Search
+          aria-hidden="true"
+          className={`text-ink-muted pointer-events-none absolute inset-y-0 my-auto ${
+            size === 'large' ? 'inset-s-4 size-4 md:inset-s-5 md:size-5' : 'inset-s-4 size-4'
+          }`}
+        />
         <input
           id={id}
           type="search"
           name={name}
-          defaultValue={defaultValue}
+          value={value}
+          onChange={(e) => {
+            setValue(e.target.value);
+            scheduleUpdate(e.target.value);
+          }}
           placeholder={placeholder}
           autoComplete="off"
           className={`text-ink placeholder:text-ink-muted min-w-0 flex-1 bg-transparent outline-none ${
-            size === 'large' ? 'text-heading px-5 py-4' : 'text-body px-4 py-3'
+            size === 'large'
+              ? 'text-body py-3 pe-4 ps-11 md:text-heading md:py-4 md:pe-5 md:ps-12'
+              : 'text-small py-2.5 pe-4 ps-11'
           }`}
         />
-        <button
-          type="submit"
-          className={`text-accent hover:bg-accent-soft border-rule border-s flex items-center gap-2 font-semibold whitespace-nowrap transition-colors ${
-            size === 'large' ? 'px-6' : 'px-4'
-          }`}
-        >
-          <Search aria-hidden="true" className="size-4" />
-          {t('submit')}
-        </button>
       </div>
     </form>
   );

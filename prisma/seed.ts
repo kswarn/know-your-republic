@@ -6,8 +6,11 @@ import { CENTRAL_ACTS } from '../content/laws/central-acts';
 import { FUNDAMENTAL_RIGHTS } from '../content/rights/fundamental-rights';
 import { PrismaClient } from '@/generated/prisma';
 import { seedGeographyAndInstitutions } from '@/lib/content/geography';
-import { seedSupremeCourt } from '@/lib/content/judiciary';
+import { seedKarnatakaGovernment } from '@/lib/content/karnataka';
+import { seedKarnatakaHighCourt, seedSupremeCourt } from '@/lib/content/judiciary';
+import { seedLegislature } from '@/lib/content/legislature';
 import { seedUnionCabinet } from '@/lib/content/nationalLeadership';
+import { seedPositionResponsibilities } from '@/lib/content/positionResponsibilities';
 import { upsertFundamentalRight } from '@/lib/content/rights';
 import { normalizeIndiaCodeRecord, upsertLaw } from '@/lib/sources/indiacode';
 
@@ -96,6 +99,23 @@ async function main() {
 
   const scJudges = await seedSupremeCourt(db);
   console.log(`Seeded Supreme Court: ${scJudges.judgeCount} judges (incl. CJI).`);
+
+  const khcJudges = await seedKarnatakaHighCourt(db);
+  console.log(`Seeded Karnataka High Court: ${khcJudges.judgeCount} judges (incl. Chief Justice).`);
+
+  const karnataka = await seedKarnatakaGovernment(db);
+  console.log(
+    `Seeded Karnataka government: CM + Deputy CM + ${karnataka.ministerCount - 1} Cabinet Ministers, ` +
+      `${karnataka.positionCount} Positions.`,
+  );
+
+  const responsibilityCount = await seedPositionResponsibilities(db);
+  console.log(`Seeded responsibilities for ${responsibilityCount} Positions.`);
+
+  const legislature = await seedLegislature(db);
+  console.log(
+    `Seeded legislature: ${legislature.lsCount} Lok Sabha + ${legislature.rsCount} Rajya Sabha members.`,
+  );
 
   await db.$disconnect();
 }

@@ -1,5 +1,6 @@
 import { Landmark } from 'lucide-react';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
+import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 
@@ -72,10 +73,20 @@ export default async function PersonDetailPage({
       </Link>
 
       <header className="space-y-3">
-        <div className="flex items-center gap-3">
-          <span className="border-rule bg-paper-raised inline-flex size-10 shrink-0 items-center justify-center rounded-full border">
-            <Landmark aria-hidden="true" className="text-ink size-5" />
-          </span>
+        <div className="flex items-start gap-4">
+          {person.photoUrl ? (
+            <Image
+              src={person.photoUrl}
+              alt=""
+              width={128}
+              height={128}
+              className="size-24 shrink-0 rounded-full object-cover md:size-32"
+            />
+          ) : (
+            <span className="border-rule bg-paper-raised inline-flex size-8 shrink-0 items-center justify-center rounded-full border md:size-10">
+              <Landmark aria-hidden="true" className="text-ink size-4 md:size-5" />
+            </span>
+          )}
           <h1 className="text-display font-semibold">{person.fullName}</h1>
         </div>
         {person.party && (
@@ -96,7 +107,8 @@ export default async function PersonDetailPage({
               <li key={tenure.id} className="border-rule border-s-2 ps-3">
                 <p className="text-body font-medium">{tenure.position.title}</p>
                 <p className="text-small text-ink-muted">{tenure.position.institution.name}</p>
-                {tenure.position.responsibilities && (
+                {tenure.position.responsibilities &&
+                  tenure.position.responsibilitiesStatus === 'PUBLISHED' && (
                   <div className="mt-1">
                     <p className="text-meta text-ink-muted font-medium">{p('responsibilities')}</p>
                     <p className="text-small whitespace-pre-line">
@@ -110,7 +122,9 @@ export default async function PersonDetailPage({
         </section>
       )}
 
-      {person.bio && <p className="text-body whitespace-pre-line">{person.bio}</p>}
+      {person.bio && person.bioStatus === 'PUBLISHED' && (
+        <p className="text-body whitespace-pre-line">{person.bio}</p>
+      )}
 
       {sponsoredLaws.length > 0 && (
         <section aria-labelledby="laws-introduced-heading">

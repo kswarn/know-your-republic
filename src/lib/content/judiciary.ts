@@ -1,12 +1,20 @@
 import type { PrismaClient } from '@/generated/prisma';
 
 import {
+  KARNATAKA_HC_CHIEF_JUSTICE,
+  KARNATAKA_HC_JUDGES,
+  KARNATAKA_HC_SOURCE_NAME,
+  KARNATAKA_HC_SOURCE_URL,
+  type KarnatakaHCJudgeSeed,
+} from '../../../content/people/karnataka-high-court';
+import {
   CHIEF_JUSTICE,
   SUPREME_COURT_JUDGES,
   SUPREME_COURT_SOURCE_URL,
   type JudgeSeed,
 } from '../../../content/people/supreme-court';
 import { SUPREME_COURT_NAME } from '../../../content/institutions/national';
+import { upsertPersonBio } from './nationalLeadership';
 
 /**
  * Ingests the Chief Justice of India and all sitting Supreme Court judges as
@@ -25,8 +33,14 @@ async function upsertPerson(db: PrismaClient, seed: JudgeSeed) {
   const dateOfBirth = seed.dateOfBirth ? new Date(seed.dateOfBirth) : undefined;
   return db.person.upsert({
     where: { sourceKey: seed.sourceKey },
-    create: { fullName: seed.fullName, sourceKey: seed.sourceKey, dateOfBirth, lastVerifiedAt: new Date() },
-    update: { fullName: seed.fullName, dateOfBirth, lastVerifiedAt: new Date() },
+    create: {
+      fullName: seed.fullName,
+      sourceKey: seed.sourceKey,
+      dateOfBirth,
+      photoUrl: seed.photoUrl,
+      lastVerifiedAt: new Date(),
+    },
+    update: { fullName: seed.fullName, dateOfBirth, photoUrl: seed.photoUrl, lastVerifiedAt: new Date() },
   });
 }
 
@@ -120,6 +134,9 @@ export async function seedSupremeCourt(db: PrismaClient) {
 
   const cji = await upsertPerson(db, CHIEF_JUSTICE);
   await ensurePersonCitation(db, cji.id);
+  if (CHIEF_JUSTICE.bio) {
+    await upsertPersonBio(db, cji.id, CHIEF_JUSTICE.bio, SUPREME_COURT_SOURCE_URL, 'Supreme Court of India');
+  }
   await ensureTenure(db, cji.id, cjiPosition.id, CHIEF_JUSTICE.dateOfAppointment);
 
   for (const seed of SUPREME_COURT_JUDGES) {
@@ -129,4 +146,115 @@ export async function seedSupremeCourt(db: PrismaClient) {
   }
 
   return { judgeCount: SUPREME_COURT_JUDGES.length + 1 };
+}
+
+async function upsertKarnatakaHCPerson(db: PrismaClient, seed: KarnatakaHCJudgeSeed) {
+  return db.person.upsert({
+    where: { sourceKey: seed.sourceKey },
+    create: { fullName: seed.fullName, sourceKey: seed.sourceKey, lastVerifiedAt: new Date() },
+    update: { fullName: seed.fullName, lastVerifiedAt: new Date() },
+  });
+}
+
+/**
+ * Marked `isPrimary: false` deliberately — no primary source was reachable for
+ * this court's roster (see content/people/karnataka-high-court.ts and
+ * docs/SOURCES_LEGAL.md). Not gated by assertPublishable (currentPosition isn't
+ * one of publish.ts's GATED_FIELDS), so this doesn't block anything, but the
+ * SourceLink component will correctly render it as a cross-check-only source
+ * rather than implying it's official.
+ */
+async function ensureKarnatakaHCCitation(db: PrismaClient, entityId: string) {
+  const existing = await db.citation.findFirst({
+    where: {
+      entityType: 'PERSON',
+      entityId,
+      field: 'currentPosition',
+      sourceUrl: KARNATAKA_HC_SOURCE_URL,
+    },
+  });
+  if (existing) {
+    await db.citation.update({ where: { id: existing.id }, data: { retrievedAt: new Date() } });
+    return existing;
+  }
+  return db.citation.create({
+    data: {
+      entityType: 'PERSON',
+      entityId,
+      field: 'currentPosition',
+      sourceName: KARNATAKA_HC_SOURCE_NAME,
+      sourceUrl: KARNATAKA_HC_SOURCE_URL,
+      isPrimary: false,
+    },
+  });
+}
+
+export async function seedKarnatakaHighCourt(db: PrismaClient) {
+  const karnataka = await db.jurisdiction.findFirst({ where: { type: 'STATE', name: 'Karnataka' } });
+  if (!karnataka) {
+    throw new Error('Karnataka Jurisdiction not found — run seedGeographyAndInstitutions first.');
+  }
+
+  const highCourt = await db.institution.findFirst({
+    where: { name: 'Karnataka High Court', type: 'COURT' },
+  });
+  if (!highCourt) {
+    throw new Error('Karnataka High Court institution not found — run seedGeographyAndInstitutions first.');
+  }
+
+  const cjPosition = await db.position.upsert({
+    where: {
+      title_institutionId_jurisdictionId: {
+        title: 'Chief Justice, Karnataka High Court',
+        institutionId: highCourt.id,
+        jurisdictionId: karnataka.id,
+      },
+    },
+    create: {
+      title: 'Chief Justice, Karnataka High Court',
+      roleType: 'JUDGE',
+      institutionId: highCourt.id,
+      jurisdictionId: karnataka.id,
+    },
+    update: {},
+  });
+
+  const judgePosition = await db.position.upsert({
+    where: {
+      title_institutionId_jurisdictionId: {
+        title: 'Judge, Karnataka High Court',
+        institutionId: highCourt.id,
+        jurisdictionId: karnataka.id,
+      },
+    },
+    create: {
+      title: 'Judge, Karnataka High Court',
+      roleType: 'JUDGE',
+      institutionId: highCourt.id,
+      jurisdictionId: karnataka.id,
+    },
+    update: {},
+  });
+
+  const cj = await upsertKarnatakaHCPerson(db, KARNATAKA_HC_CHIEF_JUSTICE);
+  await ensureKarnatakaHCCitation(db, cj.id);
+  if (KARNATAKA_HC_CHIEF_JUSTICE.bio) {
+    await upsertPersonBio(
+      db,
+      cj.id,
+      KARNATAKA_HC_CHIEF_JUSTICE.bio,
+      KARNATAKA_HC_SOURCE_URL,
+      KARNATAKA_HC_SOURCE_NAME,
+      false, // non-primary — see content/people/karnataka-high-court.ts
+    );
+  }
+  await ensureTenure(db, cj.id, cjPosition.id);
+
+  for (const seed of KARNATAKA_HC_JUDGES) {
+    const person = await upsertKarnatakaHCPerson(db, seed);
+    await ensureKarnatakaHCCitation(db, person.id);
+    await ensureTenure(db, person.id, judgePosition.id);
+  }
+
+  return { judgeCount: KARNATAKA_HC_JUDGES.length + 1 };
 }

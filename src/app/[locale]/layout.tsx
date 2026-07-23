@@ -7,13 +7,13 @@ import { Footer } from '@/components/Footer';
 import { SiteHeader } from '@/components/SiteHeader';
 import { TranslationFlag } from '@/components/TranslationFlag';
 import { fontClassForScript } from '@/i18n/fonts';
-import { LOCALES, localeMeta } from '@/i18n/locales';
+import { ENABLED_LOCALES, localeMeta } from '@/i18n/locales';
 import { routing } from '@/i18n/routing';
 
 import '../globals.css';
 
 export function generateStaticParams() {
-  return LOCALES.map(({ code }) => ({ locale: code }));
+  return ENABLED_LOCALES.map(({ code }) => ({ locale: code }));
 }
 
 export async function generateMetadata(props: {
@@ -27,7 +27,7 @@ export async function generateMetadata(props: {
     description: t('description'),
     // Every locale is a real alternate of the same record, not a duplicate.
     alternates: {
-      languages: Object.fromEntries(LOCALES.map(({ code }) => [code, `/${code}`])),
+      languages: Object.fromEntries(ENABLED_LOCALES.map(({ code }) => [code, `/${code}`])),
     },
   };
 }

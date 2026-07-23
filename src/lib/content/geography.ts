@@ -1,6 +1,7 @@
 import type { Jurisdiction, InstitutionType, JurisdictionType, PrismaClient } from '@/generated/prisma';
 
 import { HIGH_COURTS } from '../../../content/institutions/high-courts';
+import { KARNATAKA_DEPARTMENTS } from '../../../content/institutions/karnataka';
 import {
   LOK_SABHA_NAME,
   PMO_NAME,
@@ -143,6 +144,16 @@ export async function seedGeographyAndInstitutions(db: PrismaClient) {
         jurisdictionId: jurisdiction.id,
       });
     }
+  }
+
+  // Karnataka state departments — proof-of-pattern for state-level government
+  // ahead of the other 35 states/UTs (see src/lib/content/karnataka.ts).
+  const karnataka = stateJurisdictions.get('Karnataka');
+  if (!karnataka) {
+    throw new Error('Karnataka not found in STATES_AND_UTS.');
+  }
+  for (const department of KARNATAKA_DEPARTMENTS) {
+    await upsertInstitution(db, { name: department, type: 'DEPARTMENT', jurisdictionId: karnataka.id });
   }
 
   // High Courts.

@@ -23,9 +23,25 @@ async function getRepresentatives(slug: string) {
     },
   });
 
-  const people = positions.flatMap((position) =>
-    position.tenures.map((tenure) => ({ position, person: tenure.person })),
-  );
+  // One card per person, not one per position — someone holding several
+  // portfolios (e.g. a Deputy CM who is also Minister of Revenue and Sports)
+  // is still a single representative, not three.
+  const peopleById = new Map<
+    string,
+    { person: (typeof positions)[number]['tenures'][number]['person']; positionTitles: string[] }
+  >();
+  for (const position of positions) {
+    for (const tenure of position.tenures) {
+      const existing = peopleById.get(tenure.person.id);
+      const label = `${position.title} · ${position.institution.name}`;
+      if (existing) {
+        existing.positionTitles.push(label);
+      } else {
+        peopleById.set(tenure.person.id, { person: tenure.person, positionTitles: [label] });
+      }
+    }
+  }
+  const people = [...peopleById.values()];
 
   const citations = people.length
     ? await db.citation.findMany({
@@ -43,7 +59,13 @@ async function getRepresentatives(slug: string) {
     citationsByPerson.set(citation.entityId, list);
   }
 
-  return { jurisdiction, people, citationsByPerson };
+  // "Sourced or it doesn't ship": a person with no *primary* citation for
+  // their current position (e.g. Karnataka High Court judges, ingested from a
+  // secondary source pending an official one — see docs/SOURCES_LEGAL.md)
+  // doesn't appear here, even though the record exists in the database.
+  const confirmedPeople = people.filter((p) => citationsByPerson.has(p.person.id));
+
+  return { jurisdiction, people: confirmedPeople, citationsByPerson };
 }
 
 export async function generateMetadata(props: {
@@ -76,22 +98,23 @@ export default async function StatePage({
       </Link>
 
       <header className="flex items-center gap-3">
-        <span className="border-rule bg-paper-raised inline-flex size-10 shrink-0 items-center justify-center rounded-full border">
-          <MapPin aria-hidden="true" className="text-ink size-5" />
+        <span className="border-rule bg-paper-raised inline-flex size-8 shrink-0 items-center justify-center rounded-full border md:size-10">
+          <MapPin aria-hidden="true" className="text-ink size-4 md:size-5" />
         </span>
         <h1 className="text-display font-semibold">{jurisdiction.name}</h1>
       </header>
 
       {people.length > 0 ? (
         <div className="grid gap-6 md:grid-cols-2">
-          {people.map(({ position, person }) => {
+          {people.map(({ person, positionTitles }) => {
             const slug = personSlug(person.sourceKey);
             return (
               <Card
-                key={`${position.id}-${person.id}`}
+                key={person.id}
                 href={slug ? `/people/${slug}` : undefined}
                 title={person.fullName}
-                context={`${position.title} · ${position.institution.name}`}
+                photoUrl={person.photoUrl}
+                context={positionTitles.join(' · ')}
                 footer={
                   <div className="space-y-1">
                     <SourceLink citations={citationsByPerson.get(person.id) ?? []} />

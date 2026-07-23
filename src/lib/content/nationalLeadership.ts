@@ -1,13 +1,67 @@
 import type { PrismaClient, RoleType } from '@/generated/prisma';
+import { resolvePublishStatus } from '@/lib/publish';
 
 import {
   CABINET_MINISTERS,
   CABINET_SOURCE_URL,
+  PARTIES,
   PM_SOURCE_URL,
   PRIME_MINISTER,
   type CabinetMinisterSeed,
+  type PartyKey,
 } from '../../../content/people/union-cabinet';
 import { PMO_NAME } from '../../../content/institutions/national';
+
+/**
+ * Writes a Person's `bio` plus its primary Citation in a single transaction —
+ * same shape as upsertFundamentalRight (src/lib/content/rights.ts). Reused
+ * across the Union Cabinet, Karnataka government, and judiciary seeds.
+ */
+export async function upsertPersonBio(
+  db: PrismaClient,
+  personId: string,
+  bio: string,
+  sourceUrl: string,
+  sourceName: string,
+  isPrimary: boolean = true,
+) {
+  return db.$transaction(async (tx) => {
+    await tx.citation.upsert({
+      where: {
+        entityType_entityId_field_sourceUrl: {
+          entityType: 'PERSON',
+          entityId: personId,
+          field: 'bio',
+          sourceUrl,
+        },
+      },
+      create: {
+        entityType: 'PERSON',
+        entityId: personId,
+        field: 'bio',
+        sourceName,
+        sourceUrl,
+        isPrimary,
+      },
+      update: { retrievedAt: new Date() },
+    });
+
+    // Only a primary citation can reach PUBLISHED (assertPublishable's contract) —
+    // a non-primary source (e.g. the Karnataka HC judges' Wikipedia citation)
+    // correctly stays DRAFT rather than being misrepresented as sourced-and-shipped.
+    const bioStatus = await resolvePublishStatus(tx, 'PERSON', personId, isPrimary ? 'PUBLISHED' : 'DRAFT');
+    return tx.person.update({ where: { id: personId }, data: { bio, bioStatus } });
+  });
+}
+
+/**
+ * `officialUrl` (and the other contact fields) carry no `*Status` column in the
+ * schema — they aren't "explained content" gated by publish.ts, just a link, so
+ * this is a plain write.
+ */
+export async function upsertPersonContact(db: PrismaClient, personId: string, officialUrl: string) {
+  return db.person.update({ where: { id: personId }, data: { officialUrl } });
+}
 
 /**
  * Ingests the Prime Minister and the 30 Cabinet Ministers as Person + Position +
@@ -30,15 +84,35 @@ import { PMO_NAME } from '../../../content/institutions/national';
  * seedGeographyAndInstitutions for Jurisdiction's root row.
  */
 
-async function upsertPerson(db: PrismaClient, fullName: string, sourceKey: string) {
-  return db.person.upsert({
-    where: { sourceKey },
-    create: { fullName, sourceKey, lastVerifiedAt: new Date() },
-    update: { fullName, lastVerifiedAt: new Date() },
+export async function upsertPartyByName(
+  db: PrismaClient,
+  seed: { name: string; abbreviation: string },
+) {
+  return db.party.upsert({
+    where: { name: seed.name },
+    create: seed,
+    update: {},
   });
 }
 
-async function upsertPosition(
+async function upsertParty(db: PrismaClient, key: PartyKey) {
+  return upsertPartyByName(db, PARTIES[key]);
+}
+
+export async function upsertPerson(
+  db: PrismaClient,
+  fullName: string,
+  sourceKey: string,
+  partyId?: string,
+) {
+  return db.person.upsert({
+    where: { sourceKey },
+    create: { fullName, sourceKey, partyId, lastVerifiedAt: new Date() },
+    update: { fullName, partyId, lastVerifiedAt: new Date() },
+  });
+}
+
+export async function upsertPosition(
   db: PrismaClient,
   data: { title: string; roleType: RoleType; institutionId: string; jurisdictionId: string },
 ) {
@@ -55,13 +129,13 @@ async function upsertPosition(
   });
 }
 
-async function ensureCurrentTenure(db: PrismaClient, personId: string, positionId: string) {
+export async function ensureCurrentTenure(db: PrismaClient, personId: string, positionId: string) {
   const existing = await db.tenure.findFirst({ where: { personId, positionId } });
   if (existing) return existing;
   return db.tenure.create({ data: { personId, positionId, isCurrent: true } });
 }
 
-async function ensurePersonCitation(
+export async function ensurePersonCitation(
   db: PrismaClient,
   entityId: string,
   sourceUrl: string,
@@ -111,8 +185,15 @@ async function seedCabinetMinister(
   nationId: string,
   seed: CabinetMinisterSeed,
 ): Promise<string[]> {
-  const person = await upsertPerson(db, seed.fullName, seed.sourceKey);
+  const party = await upsertParty(db, seed.party);
+  const person = await upsertPerson(db, seed.fullName, seed.sourceKey, party.id);
   await ensurePersonCitation(db, person.id, CABINET_SOURCE_URL, 'Prime Minister’s Office');
+  if (seed.bio) {
+    await upsertPersonBio(db, person.id, seed.bio, CABINET_SOURCE_URL, 'Prime Minister’s Office');
+  }
+  if (seed.officialUrl) {
+    await upsertPersonContact(db, person.id, seed.officialUrl);
+  }
 
   const positionIds: string[] = [];
   for (const portfolio of seed.portfolios) {
@@ -140,8 +221,11 @@ export async function seedUnionCabinet(db: PrismaClient) {
     throw new Error('PMO institution not found — run seedGeographyAndInstitutions first.');
   }
 
-  const pm = await upsertPerson(db, PRIME_MINISTER.fullName, PRIME_MINISTER.sourceKey);
+  const pmParty = await upsertParty(db, PRIME_MINISTER.party);
+  const pm = await upsertPerson(db, PRIME_MINISTER.fullName, PRIME_MINISTER.sourceKey, pmParty.id);
   await ensurePersonCitation(db, pm.id, PM_SOURCE_URL, 'Prime Minister’s Office');
+  await upsertPersonBio(db, pm.id, PRIME_MINISTER.bio, PM_SOURCE_URL, 'Prime Minister’s Office');
+  await upsertPersonContact(db, pm.id, PRIME_MINISTER.officialUrl);
   const pmPosition = await upsertPosition(db, {
     title: 'Prime Minister of India',
     roleType: 'HEAD_OF_GOVERNMENT',

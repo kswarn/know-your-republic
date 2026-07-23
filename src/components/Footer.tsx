@@ -9,7 +9,6 @@ export async function Footer() {
         <p className="text-meta text-ink-muted mx-auto max-w-measure">
           {t("sourcing")}
         </p>
-        <p className="text-meta text-ink-muted mt-2">{t("notNews")}</p>
       </div>
     </footer>
   );

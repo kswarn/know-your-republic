@@ -11,6 +11,14 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: __dirname,
   },
+  images: {
+    // Official government photo hosts backing Person.photoUrl: sansad.in
+    // (MPs, both houses) and the s3waas.gov.in CDN (Supreme Court judges).
+    remotePatterns: [
+      { protocol: 'https', hostname: 'sansad.in', pathname: '/getFile/**' },
+      { protocol: 'https', hostname: 'cdnbbsr.s3waas.gov.in', pathname: '/**' },
+    ],
+  },
 };
 
 export default withNextIntl(nextConfig);

@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
 import { useTransition } from 'react';
 
-import { LOCALES } from '@/i18n/locales';
+import { ENABLED_LOCALES } from '@/i18n/locales';
 import { usePathname, useRouter } from '@/i18n/navigation';
 
 /**
@@ -53,11 +53,12 @@ export function LanguageSwitcher() {
         }}
         className="border-rule bg-paper-raised text-ink text-small w-full appearance-none border py-2 ps-9 pe-8"
       >
-        {LOCALES.map((locale) => (
+        {ENABLED_LOCALES.map((locale) => (
           <option key={locale.code} value={locale.code} lang={locale.code}>
             {locale.nativeName}
           </option>
         ))}
+        <option disabled>{t('moreLanguagesComingSoon')}</option>
       </select>
       <ChevronDown
         aria-hidden="true"

@@ -10,10 +10,13 @@
     "laws": "Constitution",
     "rights": "Rights",
     "judiciary": "Judiciary",
-    "me": "States",
+    "me": "Overview",
     "skipToContent": "Skip to main content",
     "language": "Language",
-    "chooseLanguage": "Choose a language"
+    "chooseLanguage": "Choose a language",
+    "moreLanguagesComingSoon": "More languages being added",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
   },
   "home": {
     "heading": "Know Your Republic",
@@ -35,14 +38,6 @@
         "searchLabel": "Search rights",
         "searchPlaceholder": "Equality, information, education"
       }
-    },
-    "locality": {
-      "heading": "Start from where you live",
-      "description": "Enter an address or PIN code to see every representative responsible for your area — from your ward to the Union government.",
-      "label": "Address or PIN code",
-      "placeholder": "e.g. 560011, or Jayanagar, Bengaluru",
-      "submit": "Find my representatives",
-      "comingSoon": "Area lookup is not available yet."
     }
   },
   "domain": {
@@ -63,7 +58,7 @@
       "description": "Judges of the Supreme Court and the High Courts, with their biographies."
     },
     "me": {
-      "title": "States",
+      "title": "Overview",
       "description": "Every representative responsible for where you live."
     }
   },
@@ -102,24 +97,45 @@
     "courtLabel": "Court"
   },
   "me": {
-    "mapHeading": "Select a state or union territory",
-    "mapDescription": "Click an area on the map to see who represents it.",
+    "mapHeading": "Every representative, at a glance",
+    "mapDescription": "Every Minister and Member of Parliament currently in office, plotted near their state. Hover a dot to see who it is, click to open their profile — or click a state itself to see everyone who represents it.",
     "backToMap": "Back to map",
-    "noResults": "No representatives have been ingested for {state} yet."
+    "noResults": "No representatives have been ingested for {state} yet.",
+    "nationalZone": "National / Union",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "chamberOptions": {
+      "all": "All",
+      "lok-sabha": "Lok Sabha",
+      "rajya-sabha": "Rajya Sabha"
+    },
+    "partyFilterLabel": "Party",
+    "allParties": "All parties",
+    "resultCount": "{count, plural, =0 {No representatives} =1 {1 representative} other {# representatives}}",
+    "independent": "Independent",
+    "house": {
+      "lokSabha": "Lok Sabha",
+      "rajyaSabha": "Rajya Sabha",
+      "government": "Government"
+    }
   },
   "people": {
-    "tabs": {
-      "hierarchy": "Hierarchy",
-      "people": "People"
-    },
-    "hierarchyHeading": "How the Union Government is organised",
-    "hierarchyDescription": "The Prime Minister and the Cabinet Ministers of the Union Council of Ministers, as currently constituted. Hover a point to see who holds it; click to open that person's page.",
-    "hierarchyEmpty": "The government hierarchy has not been ingested yet.",
     "backToPeople": "Back to People",
     "positions": "Positions",
     "party": "Party",
     "responsibilities": "Responsibilities of this position",
-    "lawsIntroduced": "Laws introduced"
+    "lawsIntroduced": "Laws introduced",
+    "chambers": {
+      "all": "All",
+      "government": "Ministers & Government",
+      "lok-sabha": "Lok Sabha",
+      "rajya-sabha": "Rajya Sabha"
+    }
+  },
+  "pagination": {
+    "previous": "Previous",
+    "next": "Next",
+    "pageOf": "Page {current} of {total}"
   },
   "record": {
     "sources": "Sources",
@@ -141,7 +157,6 @@
     "unsupported": "Your browser does not support reading this page aloud."
   },
   "search": {
-    "submit": "Search",
     "filters": "Filters",
     "clearFilters": "Clear filters",
     "noResults": "No records match your search.",
@@ -153,7 +168,6 @@
   },
   "footer": {
     "sourcing": "Every explained fact in this directory links to an official government source. Records are updated in place; the date shown is when the record was last verified.",
-    "notNews": "This is a reference directory, not a news service.",
     "corrections": "Found an error? Report it — no account needed."
   },
   "error": {

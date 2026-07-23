@@ -1,5 +1,7 @@
 import { Link } from '@/i18n/navigation';
 
+import type { ComponentProps } from 'react';
+
 /**
  * A filter is a link, not a button: it changes the URL, so the filtered view is
  * shareable, bookmarkable, and works without JavaScript. `aria-pressed` is wrong
@@ -11,7 +13,7 @@ export function FilterChip({
   selected = false,
 }: {
   label: string;
-  href: string;
+  href: ComponentProps<typeof Link>['href'];
   selected?: boolean;
 }) {
   return (

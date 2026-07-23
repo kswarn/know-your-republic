@@ -69,9 +69,22 @@ export const DEFAULT_LOCALE = 'en' satisfies Locale;
 
 /**
  * Locales whose content has been human-reviewed. Everything else renders the
- * "unreviewed translation" flag. Phase 5 moves locales out of this list's complement.
+ * "unreviewed translation" flag. Hindi and Kannada are populated (machine-
+ * translated) but not yet reviewed by a human speaker — move them here once
+ * a reviewer clears them.
  */
-export const REVIEWED_LOCALES: readonly Locale[] = ['en', 'hi', 'kn'];
+export const REVIEWED_LOCALES: readonly Locale[] = ['en'];
+
+/**
+ * Locales actually routable and switchable right now — the other 20 scheduled
+ * languages stay defined in `LOCALES` (fonts, native names, RTL metadata all
+ * ready) but are not yet wired into routing or the language switcher, so the
+ * app never advertises a locale it can't yet serve reviewed content for.
+ */
+export const ENABLED_LOCALE_CODES: readonly Locale[] = ['en', 'hi', 'kn'];
+export const ENABLED_LOCALES = LOCALES.filter((l) =>
+  (ENABLED_LOCALE_CODES as readonly string[]).includes(l.code),
+);
 
 const BY_CODE = new Map(LOCALES.map((l) => [l.code as string, l as LocaleMeta]));
 

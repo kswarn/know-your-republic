@@ -28,9 +28,9 @@ export async function DomainShell({
   return (
     <div className="space-y-8">
       <header>
-        <div className="flex items-center gap-4">
-          <span className="border-rule bg-paper-raised inline-flex size-14 shrink-0 items-center justify-center rounded-full border">
-            <Icon aria-hidden="true" className="text-ink size-7" />
+        <div className="flex items-start gap-4">
+          <span className="border-rule bg-paper-raised inline-flex size-11 shrink-0 items-center justify-center rounded-full border md:size-14">
+            <Icon aria-hidden="true" className="text-ink size-6 md:size-7" />
           </span>
           <h1 className="text-display font-semibold">{title}</h1>
         </div>

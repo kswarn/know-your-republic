@@ -74,11 +74,3 @@ Node is pinned to the version in `.nvmrc` (22). Package manager is **pnpm**.
   `next lint` is gone — run `pnpm lint` (ESLint flat config).
 - Secondary sources (PRS, MyNeta) may cross-check but never stand alone as a citation
   (`Citation.isPrimary = false`).
-
-- search should work as people type search string
-- for mind-map, any additional details added to the map, should be smaller in size and faded
-- add zoom to mind map and as user zooms in, the details reveal themselves and become normal size
-- pagination for people and laws section where we will load data only once they click that page
-- search results of home page should be fixed
-- mobile ui redesign
-- profile data

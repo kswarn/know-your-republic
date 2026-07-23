@@ -1,7 +1,6 @@
-import { Landmark, MapPin, ScrollText, ShieldCheck } from 'lucide-react';
+import { Landmark, ScrollText, ShieldCheck } from 'lucide-react';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 
-import { SearchBar } from '@/components/SearchBar';
 import { Link } from '@/i18n/navigation';
 
 const DOORS = [
@@ -42,29 +41,6 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
           </section>
         ))}
       </div>
-
-      <section
-        aria-labelledby="locality"
-        className="border-rule bg-paper-raised border p-6 md:p-8"
-      >
-        <div className="flex items-center gap-3">
-          <span className="border-rule bg-paper-raised inline-flex size-10 shrink-0 items-center justify-center rounded-full border">
-            <MapPin aria-hidden="true" className="text-ink size-5" />
-          </span>
-          <h2 id="locality" className="text-title font-semibold">
-            {t('locality.heading')}
-          </h2>
-        </div>
-        <div className="mt-5">
-          <SearchBar
-            action={`/${locale}/me`}
-            name="where"
-            label={t('locality.label')}
-            placeholder={t('locality.placeholder')}
-          />
-        </div>
-        <p className="text-small text-ink-muted mt-3">{t('locality.description')}</p>
-      </section>
     </div>
   );
 }

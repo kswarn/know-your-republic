@@ -14,8 +14,14 @@ export type CitationView = {
  * no "unsourced" state by design — an empty list is a bug in the publish gate, and
  * it says so rather than rendering a bare, authoritative-looking claim.
  */
-export async function SourceLink({ citations }: { citations: CitationView[] }) {
+export async function SourceLink({ citations: rawCitations }: { citations: CitationView[] }) {
   const t = await getTranslations('record');
+
+  // The same official page is often the source for more than one field on a
+  // record (e.g. a minister's currentPosition and bio both cite their
+  // portfolio page) — that's two Citation rows by design, but a reader should
+  // only ever see one link per distinct URL.
+  const citations = Array.from(new Map(rawCitations.map((c) => [c.sourceUrl, c])).values());
 
   if (citations.length === 0) {
     return (
@@ -35,12 +41,12 @@ export async function SourceLink({ citations }: { citations: CitationView[] }) {
           <li key={c.sourceUrl} className="inline after:content-['_·_'] last:after:content-none">
             <a
               href={c.sourceUrl}
-              className="text-accent inline-flex items-center gap-1 underline underline-offset-2"
+              className="text-accent underline underline-offset-2"
               rel="noreferrer nofollow"
               target="_blank"
             >
               {c.sourceName}
-              <ExternalLink aria-hidden="true" className="size-3" />
+              <ExternalLink aria-hidden="true" className="ms-1 inline size-3 align-text-bottom" />
             </a>
             {!c.isPrimary && <span className="text-ink-muted"> ({t('secondarySource')})</span>}
           </li>

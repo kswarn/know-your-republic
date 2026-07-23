@@ -51,9 +51,9 @@ export default async function LawDetailPage({
       </Link>
 
       <header className="space-y-3">
-        <div className="flex items-center gap-3">
-          <span className="border-rule bg-paper-raised inline-flex size-10 shrink-0 items-center justify-center rounded-full border">
-            <ScrollText aria-hidden="true" className="text-ink size-5" />
+        <div className="flex items-start gap-3">
+          <span className="border-rule bg-paper-raised inline-flex size-8 shrink-0 items-center justify-center rounded-full border md:size-10">
+            <ScrollText aria-hidden="true" className="text-ink size-4 md:size-5" />
           </span>
           <h1 className="text-display font-semibold">{law.title}</h1>
         </div>

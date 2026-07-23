@@ -3,7 +3,9 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import type { Metadata } from 'next';
 
 import { DomainShell } from '@/components/DomainShell';
-import { IndiaMap } from '@/components/IndiaMap';
+import { OverviewMap } from '@/components/OverviewMap';
+import { db } from '@/lib/db';
+import { toRepresentativePoint } from '@/lib/representatives';
 
 export async function generateMetadata(props: {
   params: Promise<{ locale: string }>;
@@ -13,12 +15,37 @@ export async function generateMetadata(props: {
   return { title: t('title'), description: t('description') };
 }
 
+/** Every Minister/Head-of-Government/Legislator currently in office, flattened
+ * for the map — the same population as the People directory, fetched in full
+ * (not paginated) since the map plots everyone at once. */
+async function getAllRepresentatives() {
+  const people = await db.person.findMany({
+    where: {
+      tenures: {
+        some: {
+          isCurrent: true,
+          position: { roleType: { in: ['HEAD_OF_GOVERNMENT', 'MINISTER', 'LEGISLATOR'] } },
+        },
+      },
+    },
+    include: {
+      party: true,
+      tenures: {
+        where: { isCurrent: true },
+        include: { position: { include: { institution: true, jurisdiction: true } } },
+      },
+    },
+  });
+  return people.map(toRepresentativePoint);
+}
+
 export default async function MePage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   setRequestLocale(locale);
 
   const t = await getTranslations('domain.me');
   const m = await getTranslations('me');
+  const representatives = await getAllRepresentatives();
 
   return (
     <DomainShell title={t('title')} icon={MapPin}>
@@ -28,7 +55,7 @@ export default async function MePage({ params }: { params: Promise<{ locale: str
         </h2>
         <p className="text-small text-ink-muted mt-1 max-w-measure">{m('mapDescription')}</p>
         <div className="mt-6">
-          <IndiaMap />
+          <OverviewMap people={representatives} />
         </div>
       </section>
     </DomainShell>

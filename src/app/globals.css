@@ -40,12 +40,16 @@
    * One type hierarchy. Indic scripts have taller ascenders and deeper descenders
    * than Latin, so line heights are generous throughout.
    */
-  --text-display: 2.75rem;
+  /* The three heading sizes scale down on narrow viewports (clamp's middle,
+     vw-driven term) rather than staying flat at their desktop size — a 44px
+     heading that suits a wide screen overwhelms a 375px-wide phone. Each
+     reaches its full desktop size by roughly tablet width. */
+  --text-display: clamp(1.875rem, 1.35rem + 3.2vw, 2.75rem);
   --text-display--line-height: 1.15;
   --text-display--letter-spacing: -0.02em;
-  --text-title: 1.75rem;
+  --text-title: clamp(1.375rem, 1.05rem + 1.9vw, 1.75rem);
   --text-title--line-height: 1.25;
-  --text-heading: 1.25rem;
+  --text-heading: clamp(1.0625rem, 0.9rem + 0.95vw, 1.25rem);
   --text-heading--line-height: 1.35;
   --text-body: 1.0625rem;
   --text-body--line-height: 1.65;
@@ -75,6 +79,15 @@
     font-size: var(--text-body);
     line-height: var(--text-body--line-height);
     text-rendering: optimizeLegibility;
+  }
+
+  /* Avoid a single short word stranding itself alone on the last line — most
+     visible on narrow, mobile-width columns of text. */
+  p,
+  h1,
+  h2,
+  h3 {
+    text-wrap: pretty;
   }
 
   /*
@@ -113,5 +126,18 @@
 
   .skip-link:focus {
     top: 0.5rem;
+  }
+
+  /* Form fields get their existing border re-coloured instead of a ring —
+     a ring around a whole input reads as noisier than just darkening the
+     box it already draws around itself. Declared in this layer (not `base`)
+     so it outranks utility classes like `border-rule`/`border-accent`, which
+     Tailwind also generates into the `utilities` layer — layer order beats
+     selector specificity, so a `base`-layer rule can't win that fight. */
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline: none;
+    border-color: var(--color-ink);
   }
 }

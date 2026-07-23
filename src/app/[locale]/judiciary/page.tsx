@@ -40,9 +40,17 @@ export default async function JudiciaryPage({
   const j = await getTranslations('judiciary');
   const search = await getTranslations('search');
 
+  // Scoped to the Supreme Court only for now — High Court judges (Karnataka's
+  // are seeded, the other 24 courts are not yet) get their own section once
+  // every court has equivalent coverage, rather than mixing partial data in here.
+  const judgeFilter = {
+    isCurrent: true,
+    position: { roleType: 'JUDGE' as const, institution: { name: 'Supreme Court of India' } },
+  };
+
   const judges = await db.person.findMany({
     where: {
-      tenures: { some: { isCurrent: true, position: { roleType: 'JUDGE' } } },
+      tenures: { some: judgeFilter },
       ...(q
         ? {
             OR: [
@@ -54,7 +62,7 @@ export default async function JudiciaryPage({
     },
     include: {
       tenures: {
-        where: { isCurrent: true, position: { roleType: 'JUDGE' } },
+        where: judgeFilter,
         include: { position: { include: { institution: true } } },
       },
     },
@@ -110,6 +118,7 @@ export default async function JudiciaryPage({
                 key={judge.id}
                 href={slug ? `/people/${slug}` : undefined}
                 title={judge.fullName}
+                photoUrl={judge.photoUrl}
                 context={
                   tenure
                     ? `${tenure.position.title} · ${tenure.position.institution.name}`
