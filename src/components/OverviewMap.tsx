@@ -30,7 +30,7 @@ const INDIA_BOUNDS: [[number, number], [number, number]] = [
 const HOUSE_COLOR: Record<House, string> = {
   'Lok Sabha': '#1d5fbf',
   'Rajya Sabha': '#b3261e',
-  Government: '#1e7a46',
+  Ministers: '#1e7a46',
 };
 
 const DOT_SIZE = 6; // px diameter
@@ -96,7 +96,7 @@ export function OverviewMap({ people }: { people: RepresentativePoint[] }) {
   const houseLabel: Record<House, string> = {
     'Lok Sabha': t('house.lokSabha'),
     'Rajya Sabha': t('house.rajyaSabha'),
-    Government: t('house.government'),
+    Ministers: t('house.ministers'),
   };
   const independent = t('independent');
 
@@ -410,7 +410,7 @@ export function OverviewMap({ people }: { people: RepresentativePoint[] }) {
 
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
         <p className="text-meta text-ink-muted">{t('resultCount', { count: filtered.length })}</p>
-        {(['Lok Sabha', 'Rajya Sabha', 'Government'] as const).map((house) => (
+        {(['Lok Sabha', 'Rajya Sabha', 'Ministers'] as const).map((house) => (
           <span key={house} className="text-meta text-ink-muted inline-flex items-center gap-1.5">
             <span aria-hidden="true" className="inline-block size-2.5 rounded-full" style={{ backgroundColor: HOUSE_COLOR[house] }} />
             {houseLabel[house]}

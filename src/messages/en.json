@@ -123,7 +123,7 @@
     "house": {
       "lokSabha": "Lok Sabha",
       "rajyaSabha": "Rajya Sabha",
-      "government": "Government"
+      "ministers": "Ministers"
     }
   },
   "people": {
