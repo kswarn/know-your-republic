@@ -41,7 +41,7 @@
       },
       "me": {
         "title": "Overview",
-        "description": "Every current Minister and Member of Parliament, plotted near their state, or find everyone who represents where you live."
+        "description": "Every current Member of Parliament, plotted near their state, or find everyone who represents where you live."
       },
       "judiciary": {
         "title": "Judiciary",
@@ -108,8 +108,8 @@
   },
   "me": {
     "mapHeading": "Every representative, at a glance",
-    "mapDescription": "Every Minister and Member of Parliament currently in office, plotted near their state. Hover a dot to see who it is, click to open their profile, or click a state itself to see everyone who represents it.",
-    "mapDescriptionTouch": "Every Minister and Member of Parliament currently in office, plotted near their state. Tap a dot to open their profile, or tap a state itself to see everyone who represents it.",
+    "mapDescription": "Every current Member of Parliament, plotted near their state. Hover a dot to see who it is, click to open their profile, or click a state itself to see everyone who represents it.",
+    "mapDescriptionTouch": "Every current Member of Parliament, plotted near their state. Tap a dot to open their profile, or tap a state itself to see everyone who represents it.",
     "backToMap": "Back to map",
     "noResults": "No representatives have been ingested for {state} yet.",
     "nationalZone": "National / Union",

@@ -412,7 +412,10 @@ export function OverviewMap({ people }: { people: RepresentativePoint[] }) {
 
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
         <p className="text-meta text-ink-muted">{t('resultCount', { count: filtered.length })}</p>
-        {(['Lok Sabha', 'Rajya Sabha', 'Ministers'] as const).map((house) => (
+        {/* Ministers are deliberately absent from this map (see the query in
+            me/page.tsx) — only Lok Sabha/Rajya Sabha members ever appear, so
+            that's all the legend needs to explain. */}
+        {(['Lok Sabha', 'Rajya Sabha'] as const).map((house) => (
           <span key={house} className="text-meta text-ink-muted inline-flex items-center gap-1.5">
             <span aria-hidden="true" className="inline-block size-2.5 rounded-full" style={{ backgroundColor: HOUSE_COLOR[house] }} />
             {houseLabel[house]}

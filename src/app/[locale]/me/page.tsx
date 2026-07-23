@@ -15,16 +15,20 @@ export async function generateMetadata(props: {
   return { title: t('title'), description: t('description') };
 }
 
-/** Every Minister/Head-of-Government/Legislator currently in office, flattened
- * for the map — the same population as the People directory, fetched in full
- * (not paginated) since the map plots everyone at once. */
+/** Every current Lok Sabha and Rajya Sabha member, flattened for the map.
+ * Deliberately narrower than the People directory: Ministers currently in the
+ * data are either Union Cabinet (a national-jurisdiction "state") or
+ * Karnataka's alone (the only state cabinet ingested so far), and plotting
+ * one state's ministers but not the other 27's read as a bug, not a feature —
+ * this map shows only what's uniform across every state today. Widen back to
+ * every roleType once every state's cabinet is ingested. */
 async function getAllRepresentatives() {
   const people = await db.person.findMany({
     where: {
       tenures: {
         some: {
           isCurrent: true,
-          position: { roleType: { in: ['HEAD_OF_GOVERNMENT', 'MINISTER', 'LEGISLATOR'] } },
+          position: { roleType: 'LEGISLATOR' },
         },
       },
     },
