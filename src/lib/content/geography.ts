@@ -1,6 +1,5 @@
 import type { Jurisdiction, InstitutionType, JurisdictionType, PrismaClient } from '@/generated/prisma';
 
-import { HIGH_COURTS } from '../../../content/institutions/high-courts';
 import { KARNATAKA_DEPARTMENTS } from '../../../content/institutions/karnataka';
 import {
   LOK_SABHA_NAME,
@@ -14,7 +13,10 @@ import { STATES_AND_UTS } from '../../../content/geography/states';
 /**
  * Structural seeding for Phase 1: the nation, all 28 states + 8 UTs and their
  * capitals, and the institutions attached to each (PMO, Union ministries,
- * Parliament, Supreme Court, state CMOs/assemblies, High Courts).
+ * Parliament, Supreme Court, state CMOs/assemblies). Judiciary coverage is
+ * Supreme Court only for now (see docs/SOURCES_LEGAL.md on why every other
+ * High Court's roster couldn't be reached) — no High Court institution shells
+ * are seeded until there's judge data to attach to them.
  *
  * This is geography and institutional structure, not current office-holders —
  * stable enough to encode directly rather than needing live verification the way
@@ -156,19 +158,9 @@ export async function seedGeographyAndInstitutions(db: PrismaClient) {
     await upsertInstitution(db, { name: department, type: 'DEPARTMENT', jurisdictionId: karnataka.id });
   }
 
-  // High Courts.
-  for (const hc of HIGH_COURTS) {
-    const jurisdiction = stateJurisdictions.get(hc.primaryState);
-    if (!jurisdiction) {
-      throw new Error(`High Court "${hc.name}" references unknown state "${hc.primaryState}".`);
-    }
-    await upsertInstitution(db, { name: hc.name, type: 'COURT', jurisdictionId: jurisdiction.id });
-  }
-
   return {
     nation,
     stateCount: STATES_AND_UTS.length,
-    highCourtCount: HIGH_COURTS.length,
     ministryCount: UNION_MINISTRIES.length,
   };
 }

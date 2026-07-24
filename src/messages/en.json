@@ -86,10 +86,6 @@
     "appliesTo": "Applies to",
     "backToRights": "Back to Rights"
   },
-  "laws": {
-    "backToLaws": "Back to Constitution",
-    "relatedRights": "Related rights"
-  },
   "constitution": {
     "description": "The Constitution of India is the country's supreme law. Adopted by the Constituent Assembly on 26 November 1949 and in force since 26 January 1950, it establishes the structure of the Union and state governments, divides powers between them, and sets out the fundamental rights and duties of every citizen. Every other law, and every act of government, must conform to it. With the amendments made since 1950, it is the longest written constitution of any sovereign nation.",
     "contentsHeading": "What it contains",
@@ -176,8 +172,7 @@
     "body": "This section is being built. Records appear only once they carry an official source."
   },
   "footer": {
-    "sourcing": "Every explained fact in this directory links to an official government source. Records are updated in place; the date shown is when the record was last verified.",
-    "corrections": "Found an error? Report it. No account needed."
+    "sourcing": "Every explained fact in this directory links to an official government source. Records are updated in place; the date shown is when the record was last verified."
   },
   "error": {
     "notFoundTitle": "Page not found",

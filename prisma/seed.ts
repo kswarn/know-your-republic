@@ -2,76 +2,27 @@ import 'dotenv/config';
 
 import { PrismaNeon } from '@prisma/adapter-neon';
 
-import { CENTRAL_ACTS } from '../content/laws/central-acts';
 import { FUNDAMENTAL_RIGHTS } from '../content/rights/fundamental-rights';
 import { PrismaClient } from '@/generated/prisma';
 import { seedGeographyAndInstitutions } from '@/lib/content/geography';
 import { seedKarnatakaGovernment } from '@/lib/content/karnataka';
-import { seedKarnatakaHighCourt, seedSupremeCourt } from '@/lib/content/judiciary';
+import { seedSupremeCourt } from '@/lib/content/judiciary';
 import { seedLegislature } from '@/lib/content/legislature';
 import { seedUnionCabinet } from '@/lib/content/nationalLeadership';
 import { seedPositionResponsibilities } from '@/lib/content/positionResponsibilities';
 import { upsertFundamentalRight } from '@/lib/content/rights';
-import { normalizeIndiaCodeRecord, upsertLaw } from '@/lib/sources/indiacode';
 
 /**
- * Seeds two kinds of content through the same idempotent, publish-gated code paths
- * real ingestion will use:
- *
- *  - one real, manually verified Law record (Phase 0 proof-of-pipeline) — see
- *    docs/SOURCES_LEGAL.md for why this is a verified record rather than a live
- *    scrape of India Code's item pages.
- *  - the full Fundamental Rights content (content/rights/fundamental-rights.ts),
- *    Phase 1's Rights section.
- *
- * Safe to re-run: both upsert helpers key on a stable natural key (`officialTextUrl`
- * for Law, `slug` for Right), so this updates existing rows in place.
+ * Seeds the full Fundamental Rights content (content/rights/fundamental-rights.ts,
+ * Phase 1's Rights section) through the same idempotent, publish-gated code path
+ * real ingestion will use. Safe to re-run: `upsertFundamentalRight` keys on the
+ * Right's stable `slug`, so this updates existing rows in place.
  */
-
-async function seedIndiaCodeLaw(db: PrismaClient) {
-  const record = normalizeIndiaCodeRecord({
-    officialTextUrl: 'https://www.indiacode.nic.in/handle/123456789/2065',
-    title: 'The Right to Information Act, 2005 (Act No. 22 of 2005)',
-    year: 2005,
-  });
-
-  const law = await upsertLaw(db, record, {
-    plainSummary:
-      'The Right to Information Act, 2005 gives a citizen the right to request information ' +
-      "held by a public authority. A public authority's designated officer must respond " +
-      'within thirty days of a written request, or within 48 hours where the request ' +
-      'concerns a threat to a person’s life or liberty. A request may be refused only on ' +
-      'grounds listed in Section 8 of the Act.',
-    publish: true,
-  });
-
-  console.log(`Seeded Law ${law.id}: "${law.title}" (${law.summaryStatus})`);
-}
 
 async function seedFundamentalRights(db: PrismaClient) {
   for (const seed of FUNDAMENTAL_RIGHTS) {
     const right = await upsertFundamentalRight(db, seed);
     console.log(`Seeded Right ${right.id}: "${right.title}" (${right.explanationStatus})`);
-  }
-}
-
-async function seedCentralActs(db: PrismaClient) {
-  for (const seed of CENTRAL_ACTS) {
-    const record = normalizeIndiaCodeRecord({
-      officialTextUrl: seed.officialTextUrl,
-      title: seed.title,
-      year: seed.year,
-      subjectArea: seed.subjectArea,
-    });
-    const law = await upsertLaw(db, record, { plainSummary: seed.plainSummary, publish: true });
-    console.log(`Seeded Law ${law.id}: "${law.title}" (${law.summaryStatus})`);
-
-    if (seed.relatedRightSlug) {
-      await db.right.updateMany({
-        where: { slug: seed.relatedRightSlug },
-        data: { relatedLawId: law.id },
-      });
-    }
   }
 }
 
@@ -81,14 +32,11 @@ async function main() {
 
   const db = new PrismaClient({ adapter: new PrismaNeon({ connectionString }) });
 
-  await seedIndiaCodeLaw(db);
   await seedFundamentalRights(db);
-  await seedCentralActs(db);
 
   const geo = await seedGeographyAndInstitutions(db);
   console.log(
-    `Seeded geography: nation + ${geo.stateCount} states/UTs, ${geo.ministryCount} ministries, ` +
-      `${geo.highCourtCount} High Courts.`,
+    `Seeded geography: nation + ${geo.stateCount} states/UTs, ${geo.ministryCount} ministries.`,
   );
 
   const cabinet = await seedUnionCabinet(db);
@@ -99,9 +47,6 @@ async function main() {
 
   const scJudges = await seedSupremeCourt(db);
   console.log(`Seeded Supreme Court: ${scJudges.judgeCount} judges (incl. CJI).`);
-
-  const khcJudges = await seedKarnatakaHighCourt(db);
-  console.log(`Seeded Karnataka High Court: ${khcJudges.judgeCount} judges (incl. Chief Justice).`);
 
   const karnataka = await seedKarnatakaGovernment(db);
   console.log(

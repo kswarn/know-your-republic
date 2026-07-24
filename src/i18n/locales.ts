@@ -69,11 +69,9 @@ export const DEFAULT_LOCALE = 'en' satisfies Locale;
 
 /**
  * Locales whose content has been human-reviewed. Everything else renders the
- * "unreviewed translation" flag. Hindi and Kannada are populated (machine-
- * translated) but not yet reviewed by a human speaker — move them here once
- * a reviewer clears them.
+ * "unreviewed translation" flag.
  */
-export const REVIEWED_LOCALES: readonly Locale[] = ['en'];
+export const REVIEWED_LOCALES: readonly Locale[] = ['en', 'hi', 'kn'];
 
 /**
  * Locales actually routable and switchable right now — the other 20 scheduled
